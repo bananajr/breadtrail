@@ -1,0 +1,613 @@
+OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+    <SIGNONMSGSRSV1>
+        <SONRS>
+            <STATUS>
+                <CODE>0
+                <SEVERITY>INFO
+            </STATUS>
+            <DTSERVER>20150510192033[0:GMT]
+            <LANGUAGE>ENG
+            <FI>
+                <ORG>Bank of America
+                <FID>5959
+            </FI>
+            <INTU.BID>6526
+        </SONRS>
+    </SIGNONMSGSRSV1>
+    <CREDITCARDMSGSRSV1>
+        <CCSTMTTRNRS>
+            <TRNUID>20150510192033[0:GMT]
+            <STATUS>
+                <CODE>0
+                <SEVERITY>INFO
+            </STATUS>
+            <CCSTMTRS>
+                <CURDEF>USD
+                <CCACCTFROM>
+                    <ACCTID>4147341071195477
+                </CCACCTFROM>
+                <BANKTRANLIST>
+                    <DTSTART>20140426160000[0:GMT]
+                    <DTEND>20140527160000[0:GMT]
+                    <STMTTRN>
+                        <TRNTYPE>CREDIT
+                        <DTPOSTED>20140426160000[0:GMT]
+                        <TRNAMT>2202.81
+                        <FITID>201404261
+                        <CORRECTFITID>201404261
+                        <CORRECTACTION>REPLACE
+                        <NAME>BA ELECTRONIC PAYMENT
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140426160000[0:GMT]
+                        <TRNAMT>-8.75
+                        <FITID>201404262
+                        <CORRECTFITID>201404262
+                        <CORRECTACTION>REPLACE
+                        <NAME>NETFLIX.COM NETFLIX.COM CA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140426160000[0:GMT]
+                        <TRNAMT>-3.99
+                        <FITID>201404263
+                        <CORRECTFITID>201404263
+                        <CORRECTACTION>REPLACE
+                        <NAME>GOOGLE *Shifty Jelly GOOGLE.COM/
+                        <MEMO>GOOGLE *Shifty Jelly GOOGLE.COM/
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140426160000[0:GMT]
+                        <TRNAMT>-22.15
+                        <FITID>201404264
+                        <CORRECTFITID>201404264
+                        <CORRECTACTION>REPLACE
+                        <NAME>QFC #5847 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140426160000[0:GMT]
+                        <TRNAMT>-7.39
+                        <FITID>201404265
+                        <CORRECTFITID>201404265
+                        <CORRECTACTION>REPLACE
+                        <NAME>ARAMARK WILD RYE CAFE SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140428160000[0:GMT]
+                        <TRNAMT>-25.44
+                        <FITID>201404286
+                        <CORRECTFITID>201404286
+                        <CORRECTACTION>REPLACE
+                        <NAME>PAGLIACCI MADISON SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140428160000[0:GMT]
+                        <TRNAMT>-1.63
+                        <FITID>201404287
+                        <CORRECTFITID>201404287
+                        <CORRECTACTION>REPLACE
+                        <NAME>THE HOME DEPOT 4702 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140428160000[0:GMT]
+                        <TRNAMT>-47.02
+                        <FITID>201404288
+                        <CORRECTFITID>201404288
+                        <CORRECTACTION>REPLACE
+                        <NAME>THE HOME DEPOT 4702 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140428160000[0:GMT]
+                        <TRNAMT>-7.10
+                        <FITID>201404289
+                        <CORRECTFITID>201404289
+                        <CORRECTACTION>REPLACE
+                        <NAME>LOWES #00004* SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140428160000[0:GMT]
+                        <TRNAMT>-28.69
+                        <FITID>2014042810
+                        <CORRECTFITID>2014042810
+                        <CORRECTACTION>REPLACE
+                        <NAME>GP*BOTTLEHOUSE SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140429160000[0:GMT]
+                        <TRNAMT>-21.72
+                        <FITID>2014042911
+                        <CORRECTFITID>2014042911
+                        <CORRECTACTION>REPLACE
+                        <NAME>QFC #5847 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140430160000[0:GMT]
+                        <TRNAMT>-9.31
+                        <FITID>2014043012
+                        <CORRECTFITID>2014043012
+                        <CORRECTACTION>REPLACE
+                        <NAME>BLUE WATER TACO GRILL - 5SEATTLE
+                        <MEMO>BLUE WATER TACO GRILL - 5SEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140430160000[0:GMT]
+                        <TRNAMT>-11.31
+                        <FITID>2014043013
+                        <CORRECTFITID>2014043013
+                        <CORRECTACTION>REPLACE
+                        <NAME>BLUE WATER TACO GRILL - 5SEATTLE
+                        <MEMO>BLUE WATER TACO GRILL - 5SEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140503160000[0:GMT]
+                        <TRNAMT>-72.93
+                        <FITID>2014050314
+                        <CORRECTFITID>2014050314
+                        <CORRECTACTION>REPLACE
+                        <NAME>MADRONA WINE MERCHANTS SEATTLE W
+                        <MEMO>MADRONA WINE MERCHANTS SEATTLE W
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140503160000[0:GMT]
+                        <TRNAMT>-106.70
+                        <FITID>2014050315
+                        <CORRECTFITID>2014050315
+                        <CORRECTACTION>REPLACE
+                        <NAME>GP*BOTTLEHOUSE SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140505160000[0:GMT]
+                        <TRNAMT>-25.72
+                        <FITID>2014050516
+                        <CORRECTFITID>2014050516
+                        <CORRECTACTION>REPLACE
+                        <NAME>QFC #5847 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140505160000[0:GMT]
+                        <TRNAMT>-3.27
+                        <FITID>2014050517
+                        <CORRECTFITID>2014050517
+                        <CORRECTACTION>REPLACE
+                        <NAME>Amazon Video On Demand 866-216-1
+                        <MEMO>Amazon Video On Demand 866-216-1
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140506160000[0:GMT]
+                        <TRNAMT>-19.71
+                        <FITID>2014050618
+                        <CORRECTFITID>2014050618
+                        <CORRECTACTION>REPLACE
+                        <NAME>SCHOONER EXACT BREWING COSEATTLE
+                        <MEMO>SCHOONER EXACT BREWING COSEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140506160000[0:GMT]
+                        <TRNAMT>-114.39
+                        <FITID>2014050619
+                        <CORRECTFITID>2014050619
+                        <CORRECTACTION>REPLACE
+                        <NAME>THE HOME DEPOT 4702 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140506160000[0:GMT]
+                        <TRNAMT>-23.71
+                        <FITID>2014050620
+                        <CORRECTFITID>2014050620
+                        <CORRECTACTION>REPLACE
+                        <NAME>MIKI YAKI GRILL SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140507160000[0:GMT]
+                        <TRNAMT>-11.44
+                        <FITID>2014050721
+                        <CORRECTFITID>2014050721
+                        <CORRECTACTION>REPLACE
+                        <NAME>BLUE WATER TACO GRILL - 5SEATTLE
+                        <MEMO>BLUE WATER TACO GRILL - 5SEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140508160000[0:GMT]
+                        <TRNAMT>-57.08
+                        <FITID>2014050822
+                        <CORRECTFITID>2014050822
+                        <CORRECTACTION>REPLACE
+                        <NAME>VIA TRIBUNALI SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140509160000[0:GMT]
+                        <TRNAMT>-22.18
+                        <FITID>2014050923
+                        <CORRECTFITID>2014050923
+                        <CORRECTACTION>REPLACE
+                        <NAME>QFC #5847 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140510160000[0:GMT]
+                        <TRNAMT>-2624.11
+                        <FITID>2014051024
+                        <CORRECTFITID>2014051024
+                        <CORRECTACTION>REPLACE
+                        <NAME>WASHINGTON ATHLETIC CLUB 206-622
+                        <MEMO>WASHINGTON ATHLETIC CLUB 206-622
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140512160000[0:GMT]
+                        <TRNAMT>-24.67
+                        <FITID>2014051225
+                        <CORRECTFITID>2014051225
+                        <CORRECTACTION>REPLACE
+                        <NAME>LOUISA'S CAFE AND BAKERY SEATTLE
+                        <MEMO>LOUISA'S CAFE AND BAKERY SEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140512160000[0:GMT]
+                        <TRNAMT>-1.00
+                        <FITID>2014051226
+                        <CORRECTFITID>2014051226
+                        <CORRECTACTION>REPLACE
+                        <NAME>SEATTLE 684-PARK SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140512160000[0:GMT]
+                        <TRNAMT>-102.39
+                        <FITID>2014051227
+                        <CORRECTFITID>2014051227
+                        <CORRECTACTION>REPLACE
+                        <NAME>COMCAST CABLE COMM 800-COMCAST W
+                        <MEMO>COMCAST CABLE COMM 800-COMCAST W
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140513160000[0:GMT]
+                        <TRNAMT>-50.16
+                        <FITID>2014051328
+                        <CORRECTFITID>2014051328
+                        <CORRECTACTION>REPLACE
+                        <NAME>THE HOME DEPOT 4702 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140513160000[0:GMT]
+                        <TRNAMT>-5.42
+                        <FITID>2014051329
+                        <CORRECTFITID>2014051329
+                        <CORRECTACTION>REPLACE
+                        <NAME>SQ *NYC DELI 7TH AVE
+                        <MEMO>SQ *NYC DELI 7TH AVE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140513160000[0:GMT]
+                        <TRNAMT>-13.00
+                        <FITID>2014051330
+                        <CORRECTFITID>2014051330
+                        <CORRECTACTION>REPLACE
+                        <NAME>AMPCO PARKING MERIDIAN WESEATTLE
+                        <MEMO>AMPCO PARKING MERIDIAN WESEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140513160000[0:GMT]
+                        <TRNAMT>-73.14
+                        <FITID>2014051331
+                        <CORRECTFITID>2014051331
+                        <CORRECTACTION>REPLACE
+                        <NAME>PELLEGRINOS ITALIAN KITCHTUMWATE
+                        <MEMO>PELLEGRINOS ITALIAN KITCHTUMWATE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140514160000[0:GMT]
+                        <TRNAMT>-91.90
+                        <FITID>2014051432
+                        <CORRECTFITID>2014051432
+                        <CORRECTACTION>REPLACE
+                        <NAME>AMAZON MKTPLACE PMTS AMZN.COM/BI
+                        <MEMO>AMAZON MKTPLACE PMTS AMZN.COM/BI
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140515160000[0:GMT]
+                        <TRNAMT>-61.47
+                        <FITID>2014051533
+                        <CORRECTFITID>2014051533
+                        <CORRECTACTION>REPLACE
+                        <NAME>POQUITOS SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140516160000[0:GMT]
+                        <TRNAMT>-32.70
+                        <FITID>2014051634
+                        <CORRECTFITID>2014051634
+                        <CORRECTACTION>REPLACE
+                        <NAME>CENTRAL COOP - NCGA SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140516160000[0:GMT]
+                        <TRNAMT>-6.00
+                        <FITID>2014051635
+                        <CORRECTFITID>2014051635
+                        <CORRECTACTION>REPLACE
+                        <NAME>HADDONFIELD INN HADDONFIELD NJ
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140516160000[0:GMT]
+                        <TRNAMT>-51.48
+                        <FITID>2014051636
+                        <CORRECTFITID>2014051636
+                        <CORRECTACTION>REPLACE
+                        <NAME>QFC #5847 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140519160000[0:GMT]
+                        <TRNAMT>-27.00
+                        <FITID>2014051937
+                        <CORRECTFITID>2014051937
+                        <CORRECTACTION>REPLACE
+                        <NAME>AMPCO PARKING MERIDIAN WESEATTLE
+                        <MEMO>AMPCO PARKING MERIDIAN WESEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140519160000[0:GMT]
+                        <TRNAMT>-13.00
+                        <FITID>2014051938
+                        <CORRECTFITID>2014051938
+                        <CORRECTACTION>REPLACE
+                        <NAME>AMPCO PARKING MERIDIAN WESEATTLE
+                        <MEMO>AMPCO PARKING MERIDIAN WESEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140519160000[0:GMT]
+                        <TRNAMT>-7.00
+                        <FITID>2014051939
+                        <CORRECTFITID>2014051939
+                        <CORRECTACTION>REPLACE
+                        <NAME>SEA PPG POF &amp; IN LANE SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140519160000[0:GMT]
+                        <TRNAMT>-17.24
+                        <FITID>2014051940
+                        <CORRECTFITID>2014051940
+                        <CORRECTACTION>REPLACE
+                        <NAME>CUPCAKE ROYALE &amp; VERITE CSEATTLE
+                        <MEMO>CUPCAKE ROYALE &amp; VERITE CSEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140519160000[0:GMT]
+                        <TRNAMT>-1350.00
+                        <FITID>2014051941
+                        <CORRECTFITID>2014051941
+                        <CORRECTACTION>REPLACE
+                        <NAME>GREEN LAKE JEWELRY 206-527-1108 
+                        <MEMO>GREEN LAKE JEWELRY 206-527-1108 
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140519160000[0:GMT]
+                        <TRNAMT>-344.93
+                        <FITID>2014051942
+                        <CORRECTFITID>2014051942
+                        <CORRECTACTION>REPLACE
+                        <NAME>GREEN LAKE JEWELRY 206-527-1108 
+                        <MEMO>GREEN LAKE JEWELRY 206-527-1108 
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140520160000[0:GMT]
+                        <TRNAMT>-23.66
+                        <FITID>2014052043
+                        <CORRECTFITID>2014052043
+                        <CORRECTACTION>REPLACE
+                        <NAME>QFC #5847 SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>CREDIT
+                        <DTPOSTED>20140520160000[0:GMT]
+                        <TRNAMT>6.00
+                        <FITID>2014052044
+                        <CORRECTFITID>2014052044
+                        <CORRECTACTION>REPLACE
+                        <NAME>HADDONFIELD INN HADDONFIELD NJ
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140520160000[0:GMT]
+                        <TRNAMT>-32.89
+                        <FITID>2014052045
+                        <CORRECTFITID>2014052045
+                        <CORRECTACTION>REPLACE
+                        <NAME>CHEVRON 00203561 EVERETT WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140522160000[0:GMT]
+                        <TRNAMT>-22.97
+                        <FITID>2014052246
+                        <CORRECTFITID>2014052246
+                        <CORRECTACTION>REPLACE
+                        <NAME>ELLIOTT BAY BOOK COMPANY SEATTLE
+                        <MEMO>ELLIOTT BAY BOOK COMPANY SEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140522160000[0:GMT]
+                        <TRNAMT>-5.14
+                        <FITID>2014052247
+                        <CORRECTFITID>2014052247
+                        <CORRECTACTION>REPLACE
+                        <NAME>PACIFIC SUPPLY COMPANY SEATTLE W
+                        <MEMO>PACIFIC SUPPLY COMPANY SEATTLE W
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140522160000[0:GMT]
+                        <TRNAMT>-47.97
+                        <FITID>2014052248
+                        <CORRECTFITID>2014052248
+                        <CORRECTACTION>REPLACE
+                        <NAME>GP*BOTTLEHOUSE SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140523160000[0:GMT]
+                        <TRNAMT>-6.00
+                        <FITID>2014052349
+                        <CORRECTFITID>2014052349
+                        <CORRECTACTION>REPLACE
+                        <NAME>REPUBLIC PARKING 30 534 SEATTLE 
+                        <MEMO>REPUBLIC PARKING 30 534 SEATTLE 
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140523160000[0:GMT]
+                        <TRNAMT>-13.49
+                        <FITID>2014052350
+                        <CORRECTFITID>2014052350
+                        <CORRECTACTION>REPLACE
+                        <NAME>BLUE WATER TACO GRILL - 5SEATTLE
+                        <MEMO>BLUE WATER TACO GRILL - 5SEATTLE
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140523160000[0:GMT]
+                        <TRNAMT>-62.91
+                        <FITID>2014052351
+                        <CORRECTFITID>2014052351
+                        <CORRECTACTION>REPLACE
+                        <NAME>TERRA PLATA SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140524160000[0:GMT]
+                        <TRNAMT>-25.88
+                        <FITID>2014052452
+                        <CORRECTFITID>2014052452
+                        <CORRECTACTION>REPLACE
+                        <NAME>CENTRAL COOP - NCGA SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140527160000[0:GMT]
+                        <TRNAMT>-104.55
+                        <FITID>2014052753
+                        <CORRECTFITID>2014052753
+                        <CORRECTACTION>REPLACE
+                        <NAME>RAVISH SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140527160000[0:GMT]
+                        <TRNAMT>-89.76
+                        <FITID>2014052754
+                        <CORRECTFITID>2014052754
+                        <CORRECTACTION>REPLACE
+                        <NAME>Amazon.com AMZN.COM/BILLWA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140527160000[0:GMT]
+                        <TRNAMT>-60.37
+                        <FITID>2014052755
+                        <CORRECTFITID>2014052755
+                        <CORRECTACTION>REPLACE
+                        <NAME>VIA TRIBUNALI SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140527160000[0:GMT]
+                        <TRNAMT>-51.11
+                        <FITID>2014052756
+                        <CORRECTFITID>2014052756
+                        <CORRECTACTION>REPLACE
+                        <NAME>ST CLOUDS SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140527160000[0:GMT]
+                        <TRNAMT>-30.83
+                        <FITID>2014052757
+                        <CORRECTFITID>2014052757
+                        <CORRECTACTION>REPLACE
+                        <NAME>LITTLE WATER CANTINA SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140527160000[0:GMT]
+                        <TRNAMT>-10.00
+                        <FITID>2014052758
+                        <CORRECTFITID>2014052758
+                        <CORRECTACTION>REPLACE
+                        <NAME>IMPARK00250072U SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140527160000[0:GMT]
+                        <TRNAMT>-1.00
+                        <FITID>2014052759
+                        <CORRECTFITID>2014052759
+                        <CORRECTACTION>REPLACE
+                        <NAME>SEATTLE 684-PARK SEATTLE WA
+                    </STMTTRN>
+                    <STMTTRN>
+                        <TRNTYPE>PAYMENT
+                        <DTPOSTED>20140527160000[0:GMT]
+                        <TRNAMT>-8.75
+                        <FITID>2014052760
+                        <CORRECTFITID>2014052760
+                        <CORRECTACTION>REPLACE
+                        <NAME>NETFLIX.COM 408-540-3700 CA
+                    </STMTTRN>
+                </BANKTRANLIST>
+                <LEDGERBAL>
+                    <BALAMT>-6139.52
+                    <DTASOF>20140528000000[0:GMT]
+                </LEDGERBAL>
+            </CCSTMTRS>
+        </CCSTMTTRNRS>
+    </CREDITCARDMSGSRSV1>
+</OFX>
