@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 from ofxparse import OfxParser
 from parser import Parser as LedgerParser, ParseError as LedgerParseError
 from type_utils import *
+from config import config
 
 import sys
 import argparse
@@ -107,7 +109,7 @@ def print_txn(t, f):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Import & convert OFX file')
-    parser.add_argument('-l', '--ledger', type=str, default="ledger.dat",
+    parser.add_argument('-l', '--ledger', type=str,
                         help='Ledger file to compare against')
     parser.add_argument('--combine-memo', dest="combine_memo", action="store_true", 
                         help='Combine the memo field with the payee')
@@ -124,7 +126,7 @@ if __name__ == "__main__":
 
     try:
         p = LedgerParser()
-        ledger = p.parse(args.ledger)
+        ledger = p.parse(args.ledger or config.get_ledger_path())
     except LedgerParseError as e:
         sys.stderr.write(e.msg);
         sys.exit(1)
