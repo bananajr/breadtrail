@@ -2,6 +2,7 @@ import re
 import datetime
 from pipes import quote
 from decimal import Decimal
+from titlecase import titlecase
 
 
 
@@ -13,7 +14,7 @@ def cents_from_str(s):
     m = re.match(r"\s*\$?(\d+)", s)
     if m:
         return int(m.group(1))*100
-    raise ValueError('invalid literal for Amount(): %s' % s)
+    return None
 
 def cents_to_str(c):
     if c >= 0:
@@ -40,10 +41,25 @@ def datetime_from_str(str):
     except ValueError: pass
 
 
+
+_find_unsafe = re.compile(r'[a-zA-Z0-9_^@%+=:,./-] \t\r\n').search
+
 def quote_str(s):
-    return quote(s)
+    # use single quotes, and put single quotes into double quotes
+    # the string $'b is then quoted as '$'"'"'b'
+    return "\"" + s.replace("\"", "\\\"") + "\""
 
 def quote_str_if_needed(s):
-    sq = quote_str(s)
-    return s if len(sq) == len(s) + 2 else sq
+    return s if not _find_unsafe(s) is None else quote_str(s)
 
+_acronyms = [
+        'TCP', 'UDP',
+        'LLC',
+        'WA', 'CA', 'OR', 'NY',
+        ]
+def _titlecase_callback(s, **kwargs):
+    s = s.upper()
+    if s in _acronyms: return s
+
+def titlecase_str(s):
+    return titlecase(s, callback=_titlecase_callback)
