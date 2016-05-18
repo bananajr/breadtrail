@@ -66,6 +66,7 @@ class ImportedTransaction(object):
         self.account_name = account_name
         self.allocations = [] # list of tuples of (amount, "name")
         self.properties = {}
+        self.tags = []
 
 def ofx_txn_to_ledger_txn(t, account):
     #t.type    # unicode string: 'payment', 'credit'
@@ -80,10 +81,12 @@ def ofx_txn_to_ledger_txn(t, account):
     cents = cents_from_decimal(t.amount)
     it = ImportedTransaction(t.date, cents_from_decimal(t.amount), account.name)
     it.description = str(t.payee)
+
     if t.memo and len(t.memo) > 0 and t.memo != t.payee:
         it.properties['bank_memo'] = str(t.memo)
     if t.id and len(t.id) > 0:
         it.properties['bank_id'] = str(t.id)
+    it.tags.append("import_unverified")
     return it
 
 
@@ -100,6 +103,10 @@ def print_txn(t, f):
         else:
             line = ("    allocate $", cents_to_str(cat[0]), " to ", cat[1])
         for tok in line: f.write(tok)
+        f.write("\n")
+    for tag in t.tags:
+        f.write("    tag ")
+        f.write(quote_str_if_needed(tag))
         f.write("\n")
     for key, value in t.properties.iteritems():
         line = ("    ", key, ": ", quote_str_if_needed(value))
