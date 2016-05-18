@@ -3,6 +3,7 @@
 from ledger import *
 from type_utils import *
 import parser
+from config import config
 
 import cmdln
 from datetime import datetime
@@ -21,10 +22,12 @@ class BreadTrail(cmdln.Cmdln):
 
     def init_ledger(self):
         try:
-            p = parser.Parser()
-            self.ledger.append(p.parse(self.options.filename))
+            p = parser.Parser(self.ledger)
+            p.parse(self.options.filename or config.get_ledger_path())
         except parser.ParseError as e:
-            sys.stderr.write(e.msg);
+            sys.stderr.write("Error (%s:%d): %s" % (e.filename, e.linenum, e.msg))
+            if not e.msg.endswith('\n'):
+                sys.stderr.write('\n')
             sys.exit(1)
 
 
@@ -32,7 +35,6 @@ class BreadTrail(cmdln.Cmdln):
         op = cmdln.Cmdln.get_optparser(self)
         op.add_option("-f", "--filename", dest="filename",
                       help="ledger filename")
-        op.set_defaults(filename="~/.ledger/ledger.dat")
         return op
 
     #@cmdln.option("-u", "--show-updates", action="store_true", help="display update information")

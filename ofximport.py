@@ -90,10 +90,20 @@ def ofx_txn_to_ledger_txn(t, account):
     return it
 
 
+
+def finalize_ledger_txn(it, account):
+    if args.memo and 'bank_memo' not in it.properties:
+        it.properties['bank_memo'] = it.description
+        if args.memo == 'title':
+            it.description = titlecase_str(it.description)
+    return it
+
+
+
 def print_txn(t, f):
     datestr = datetime_to_date_str(t.date)
     dirstr = "from" if t.amount < 0 else "into"
-    amtstr = cents_to_str(t.amount)
+    amtstr = cents_to_str(t.amount if t.amount >= 0 else -t.amount)
     line = (datestr, " $", amtstr, " ", dirstr, " ", t.account_name, " ", quote_str(t.description))
     for tok in line: f.write(tok)
     f.write("\n")
@@ -118,8 +128,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Import & convert OFX file')
     parser.add_argument('-l', '--ledger', type=str,
                         help='Ledger file to compare against')
+    parser.add_argument('--memo', choices=['none', 'title'], default=None,
+                        help='make a bank_memo: property and update the memo')
     parser.add_argument('--combine-memo', dest="combine_memo", action="store_true", 
-                        help='Combine the memo field with the payee')
+                        help='Combine the bank memo field with the payee')
     parser.set_defaults(combine_memo=False);
     parser.add_argument('--stats', dest="output_stats", action="store_true", default=False,
                         help='Output stats even when printing to stdout')
@@ -133,9 +145,12 @@ if __name__ == "__main__":
 
     try:
         p = LedgerParser()
-        ledger = p.parse(args.ledger or config.get_ledger_path())
+        p.parse(args.ledger or config.get_ledger_path())
+        ledger = p.ledger
     except LedgerParseError as e:
-        sys.stderr.write(e.msg);
+        sys.stderr.write("Error (%s:%d): %s" % (e.filename, e.linenum, e.msg))
+        if not e.msg.endswith('\n'):
+            sys.stderr.write('\n')
         sys.exit(1)
 
     if not args.account_name in ledger.accounts:
@@ -150,6 +165,7 @@ if __name__ == "__main__":
     for ot in new_txns:
         lt = ofx_txn_to_ledger_txn(ot, laccount)
         lt = filter_imported_transaction(lt)
+        lt = finalize_ledger_txn(lt, laccount)
         print_txn(lt, sys.stdout)
         print
 

@@ -11,10 +11,17 @@ class Category(object):
         self.description = description
         self.goal = None
 
+class Tag(object):
+    def __init__(self, name, description=None):
+        self.name = name
+        self.description = description
+        self.goal = None
+
 class Allocation(object):
     def __init__(self, amount, category):
         self.amount = amount
         self.category = category
+        self.tags = []
 
 
 
@@ -25,6 +32,7 @@ class Transaction(object):
         self.description = None;
         self.projected = False
         self.properties = {}
+        self.tags = {}
 
 class IncomeTransaction(Transaction):
     def __init__(self, amount, date, account):
@@ -53,11 +61,14 @@ class TransferTransaction(Transaction):
 class Ledger(object):
     def __init__(self):
         self.accounts     = {}   # keyed by account.name
-        self.categories   = { 'unallocated': Category('unallocated') }
+        self.categories   = { 'unallocated': Category('unallocated')  }
+        self.tags         = { 'import_unverified' : Tag('unverified') }
         self.transactions = []
 
     def append(self, other):
+        print "append t0: %d" % len(self.transactions)
         self.accounts.update(other.accounts)
         self.categories.update(other.categories)
         self.transactions.extend(other.transactions)
+        print "append t1: %d" % len(self.transactions)
 
