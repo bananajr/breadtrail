@@ -6,7 +6,7 @@ class LineParseError(Exception):
 
 
 class Token(object):
-    def __init__(self, prefix, val):
+    def __init__(self, val, prefix=' '):
         self.prefix = prefix
         self.value  = val
 
@@ -18,7 +18,7 @@ def _get_token(line, i):
     i0 = i
     while True:
         if i == len(line):
-            return (Token(line, ''), i)
+            return (Token('', line), i)
         if not str.isspace(line[i]):
             break
         i = i + 1
@@ -34,7 +34,7 @@ def _get_token(line, i):
             if escape:
                 raise LineParseError(i, "unclosed escape")
             else:
-                return (Token(line[i0:i1], token), i)
+                return (Token(token, line[i0:i1]), i)
 
         if quote == ' ': # consuming whitespace prefix
             if not str.isspace(line[i]):
@@ -61,7 +61,7 @@ def _get_token(line, i):
         else:
             token = token + line[i]
         i = i + 1
-    return (Token(line[i0:i1], token), i)
+    return (Token(token, line[i0:i1]), i)
 
 
 
