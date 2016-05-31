@@ -18,10 +18,10 @@ def cents_from_str(s):
 
 def cents_to_str(c):
     if c >= 0:
-        return "%d.%d" % (c//100, c % 100)
+        return "%d.%02d" % (c//100, c % 100)
     else:
         nc = -c
-        return "(%d.%d)" % (nc//100, nc % 100)
+        return "(%d.%02d)" % (nc//100, nc % 100)
 
 def cents_from_decimal(d):
     return int(d*100)

@@ -57,16 +57,15 @@ def filter(ofx, lgr_txns):
     return sorted_ofx_txns
 
 
-
 class ImportedTransaction(object):
     def __init__(self, date, amount, account_name):
-        self.date = date
         self.amount = amount
+        self.date = date
         self.description = None
-        self.account_name = account_name
-        self.allocations = [] # list of tuples of (amount, "name")
         self.properties = {}
         self.tags = []
+        self.account_name = account_name
+        self.allocations = [] # list of tuples of (amount, "name")
 
 def ofx_txn_to_ledger_txn(t, account):
     #t.type    # unicode string: 'payment', 'credit'
@@ -144,8 +143,8 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     try:
-        p = LedgerParser()
-        p.parse(args.ledger or config.get_ledger_path())
+        p = LedgerParser(args.ledger or config.get_ledger_path())
+        p.parse()
         ledger = p.ledger
     except LedgerParseError as e:
         sys.stderr.write("Error (%s:%d): %s" % (e.filename, e.linenum, e.msg))

@@ -70,10 +70,10 @@ _subs = [
 @add_filter
 def filter_subs(t):
     for s in _subs:
-        (desc, n) = re.subn(s[0], s[1], t.description, flags=re.IGNORECASE)
-        if n is not 0:
+        match = re.match(s[0], t.description, re.IGNORECASE)
+        if match:
             t.properties['bank_memo'] = t.description
-            t.description = desc
+            t.description = match.expand(s[1])
             if len(s) > 2 and s[2]: # category
                 t.allocations.append((None, s[2]))
     return t
@@ -94,6 +94,12 @@ def filter_qfc(t):
     t.allocations.append((None, "food:groceries"))
     return t
 
+
+
+def filter_transaction(t):
+    for fn in _filters:
+        t = fn(t)
+    return t
 
 
 def filter_imported_transaction(t):

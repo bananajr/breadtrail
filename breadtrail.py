@@ -6,10 +6,9 @@ import parser
 from config import config
 
 import cmdln
-from datetime import datetime
-import sys
+import sys, os
 import re
-import logging
+import filecmp
 
 
 
@@ -18,17 +17,49 @@ class BreadTrail(cmdln.Cmdln):
 
     def __init__(self):
         cmdln.Cmdln.__init__(self)
-        self.ledger = Ledger()
 
-    def init_ledger(self):
+    def _parse_ledger(self):
         try:
-            p = parser.Parser(self.ledger)
-            p.parse(self.options.filename or config.get_ledger_path())
+            self.parser = parser.Parser(self.options.filename or config.get_ledger_path())
+            self.parser.parse()
         except parser.ParseError as e:
             sys.stderr.write("Error (%s:%d): %s" % (e.filename, e.linenum, e.msg))
             if not e.msg.endswith('\n'):
                 sys.stderr.write('\n')
             sys.exit(1)
+
+    def _write_ledger(self):
+        class writer(object):
+            def __init__(self, filename):
+                self.filename = filename
+                self.fp = open(self.filename + '_', 'w')
+            def write(self, s):
+                self.fp.write(s)
+            def finish_and_test_same(self):
+                self.fp.close()
+                if not filecmp.cmp(self.filename, self.filename + '_'):
+                    return False
+                os.remove(self.filename + '_')
+                return True
+
+        out_stack = [writer(self.parser.filename + '_')]
+        print ">>> output is now going to " + out_stack[-1].filename
+        for cmd in self.parser.commands:
+            if cmd.line:
+                out_stack[-1].write(cmd.line.raw_line)
+            if hasattr(cmd, 'subcommands'):
+                for scmd in cmd.subcommands:
+                    if scmd.line:
+                        out_stack[-1].write(scmd.line.raw_line)
+            if isinstance(cmd, ImportFile):
+                out_stack.append(writer(cmd.path + '_'))
+                print ">>> output is now going to " + out_stack[-1].filename
+            elif isinstance(cmd, EndOfFile):
+                last_writer = out_stack.pop()
+                if last_writer.finish_and_test_same():
+                    print ">>> no difference when writing %s; deleting tmp file" % last_writer.filename
+                if len(out_stack) > 0: # still going
+                    print ">>> output is back to " + out_stack[-1].filename
 
 
     def get_optparser(self):
@@ -40,7 +71,17 @@ class BreadTrail(cmdln.Cmdln):
     #@cmdln.option("-u", "--show-updates", action="store_true", help="display update information")
     #@cmdln.option("-v", "--verbose", action="store_true", help="print extra information")
 
+    @cmdln.alias("verify")
+    def do_check(self, subcmd, opts):
+        """${cmd_name}: simply read and rewrite the ledger, checking for errors
 
+        ${cmd_usage}
+        ${cmd_option_list}
+        """
+        self._parse_ledger()
+        self._write_ledger()
+
+    @cmdln.option("--date", help="compute the balance on the given date")
     @cmdln.alias("bal")
     def do_balance(self, subcmd, opts, *account_names):
         """${cmd_name}: compute the balance of an account
@@ -48,11 +89,14 @@ class BreadTrail(cmdln.Cmdln):
         ${cmd_usage}
         ${cmd_option_list}
         """
-        self.init_ledger()
+        self._parse_ledger()
 
-        keys = self.ledger.accounts.keys()
+        date = datetime_from_str(opts.date) if opts.date else None
+
+        keys = self.parser.ledger.accounts.keys()
         balances = dict(zip(keys, [0]*len(keys)))
-        for t in self.ledger.transactions:
+        for t in self.parser.ledger.transactions:
+            if date and t.date > date: continue
             balances[t.account.name] += t.signed_amount()
 
         if len(account_names) == 0:
@@ -72,13 +116,13 @@ class BreadTrail(cmdln.Cmdln):
         ${cmd_usage}
         ${cmd_option_list}
         """
-        self.init_ledger()
-        if not account in self.ledger.accounts:
+        self._parse_ledger()
+        if not account in self.parser.ledger.accounts:
             print "Error: unknown account name '%s'." % account
             return
-        account = self.ledger.accounts[account]
+        account = self.parser.ledger.accounts[account]
         balance = 0
-        for t in self.ledger.transactions:
+        for t in self.parser.ledger.transactions:
             if t.account is not account: continue
             amount = t.amount
             if isinstance(t, ExpenditureTransaction): amount = -amount
@@ -94,20 +138,86 @@ class BreadTrail(cmdln.Cmdln):
         ${cmd_usage}
         ${cmd_option_list}
         """
-        self.init_ledger()
-        if not category in self.ledger.categories:
+        self._parse_ledger()
+        if not category in self.parser.ledger.categories:
             print "Error: unknown category name '%s'." % cat_name
             return
-        cat = self.ledger.categories[category]
+        cat = self.parser.ledger.categories[category]
         balance = 0
-        for t in self.ledger.transactions:
-            factor = 1 if isinstance(t, IncomeTransaction) else -1
+        for t in self.parser.ledger.transactions:
+            factor = 1 
             desc = t.description or ''
             for a in t.allocations:
                 if a.category is not cat: continue
-                amount = a.amount*factor
+                amount = a.amounts
+                if isinstance(t, ExpenditureTransaction): amount = -amount
                 balance = balance + amount
-                print "%s %10s %10s %s" % (str(t.date.date()), cents_to_str(amount), cents_to_str(balance), desc)
+                print "%s %10s %10s %s" % (str(t.date.date()), cents_to_str(amount),
+                        cents_to_str(balance), t.description)
+
+    @cmdln.option("-i", "--init-stmt",     help="")
+    @cmdln.option("-p", "--process-stmt",  help="")
+    @cmdln.option("-f", "--finalize-stmt", help="")
+    def do_report(self, subcmd, opts, select_expn):
+        """${cmd_name}: generate reports
+
+        ${cmd_usage}
+        ${cmd_option_list}
+        """
+        self._parse_ledger()
+
+        match = re.match('(lambda\s+)?(\w+):(.*)', select_expn)
+        if not match:
+            print "Error: unexpected syntax in 'select' statement."
+            return
+        select_expn = 'lambda %s: %s' % match.group(2, 3)
+        select = compile(select_expn, '<string>', 'eval')
+
+        if not opts.init_stmt:
+            init = None
+        else:
+            init = compile(opts.init_stmt, '<string>', 'exec')
+
+        if not opts.process_stmt:
+            process_param = 't'
+            opts.process_stmt  = 'print t'
+        else:
+            match = re.match('(\s+)?(\w+):\s*(.*)', opts.process_stmt)
+            if not match:
+                print "Error: unexpected syntax in 'process' statement."
+                return
+            (process_param, opts.process_stmt) = match.group(2, 3)
+        process = compile(opts.process_stmt, '<string>', 'exec')
+
+        if not opts.finalize_stmt:
+            finalize = None
+        else:
+            finalize = compile(opts.finalize_stmt, '<string>', 'exec')
+
+        context = { }
+        if init:
+            exec(init, context)
+        for t in self.parser.ledger.transactions:
+            if not eval(select, context)(t):
+                continue
+            context[process_param] = t
+            exec(process, context)
+        if finalize:
+            exec(finalize, context)
+
+
+    def do_listfiles(self, usbcmd, opts):
+        """${cmd_name}: lists the ledger file and all imported files
+
+        ${cmd_usage}
+        ${cmd_option_list}
+        """
+        self._parse_ledger()
+        print self.parser.filename
+        for cmd in self.parser.commands:
+            if isinstance(cmd, ImportFile):
+                print cmd.path
+
 
 
 
