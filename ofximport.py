@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from ofxparse import OfxParser
 from parser import Parser as LedgerParser, ParseError as LedgerParseError
+from ledger import *
 from type_utils import *
 from config import config
 
@@ -57,17 +58,7 @@ def filter(ofx, lgr_txns):
     return sorted_ofx_txns
 
 
-class ImportedTransaction(object):
-    def __init__(self, date, amount, account_name):
-        self.amount = amount
-        self.date = date
-        self.description = None
-        self.properties = {}
-        self.tags = []
-        self.account_name = account_name
-        self.allocations = [] # list of tuples of (amount, "name")
-
-def ofx_txn_to_ledger_txn(t, account):
+def ofx_txn_to_ledger_txn(t):
     #t.type    # unicode string: 'payment', 'credit'
     #t.date    # datetime.datetime
     #t.amount  # decimal.Decimal: negative for payments
@@ -90,7 +81,7 @@ def ofx_txn_to_ledger_txn(t, account):
 
 
 
-def finalize_ledger_txn(it, account):
+def finalize_ledger_txn(it):
     if args.memo and 'bank_memo' not in it.properties:
         it.properties['bank_memo'] = it.description
         if args.memo == 'title':
@@ -106,11 +97,11 @@ def print_txn(t, f):
     line = (datestr, " $", amtstr, " ", dirstr, " ", t.account_name, " ", quote_str(t.description))
     for tok in line: f.write(tok)
     f.write("\n")
-    for cat in t.allocations:
-        if not cat[0]:
-            line = ("    allocate all to ", cat[1])
+    for (cat_name, a) in t.allocations.iteritems():
+        if not a.amount:
+            line = ("    allocate all to ", cat_name)
         else:
-            line = ("    allocate $", cents_to_str(cat[0]), " to ", cat[1])
+            line = ("    allocate $", cents_to_str(a.amount), " to ", cat_name)
         for tok in line: f.write(tok)
         f.write("\n")
     for tag in t.tags:
@@ -162,10 +153,10 @@ if __name__ == "__main__":
     new_txns = filter(ofx, ltxns)
 
     for ot in new_txns:
-        lt = ofx_txn_to_ledger_txn(ot, laccount)
-        lt = filter_transaction(lt)
-        lt = finalize_ledger_txn(lt, laccount)
-        print_txn(lt, sys.stdout)
+        lt = ofx_txn_to_ledger_txn(ot)
+        filter_transaction(ledger, lt)
+        lt = finalize_ledger_txn(lt)
+        print_txn(lt, laccount, sys.stdout)
         print
 
     if (args.output_stats):
