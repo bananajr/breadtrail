@@ -208,22 +208,55 @@ class Parser(object):
         self.assert_subcommand(Transaction, "transaction", subcommand)
 
     def parse_transaction_allocate(self, line):
-        self.assert_transaction_subcommand(line.tokens[0].value)
-
         # put [(<amount>|all|remainder)] into [envelope] <category> # for income (+amount)
         # take [(<amount|all|remainder)] from [envelope] <category> # for expense (-amount)
-        # allocate (<amount>|all|remainder) (to|into|as) <category>
+        self.assert_transaction_subcommand(line.tokens[0].value)
         tokens = line.token_values()
-        if len(tokens) != 4:
-            raise ParseError(self.reader, "wrong number of arguments")
-        if tokens[1] == 'all' or tokens[1] == 'remainder':
+        if tokens[0] == "put":
+            if self.commands[-1].sign != 1:
+                raise ParseError(self.reader, "'put' allocation for income transaction")
+        else: # tokens[0] is "take"
+            if self.commands[-1].sign != -1:
+                raise ParseError(self.reader, "'take' allocation for expenditure transaction")
+        tokens = line.token_values()
+        if len(tokens) < 3:
+            raise ParseError(self.reader, "need at least 2 arguments")
+        ti = 1
+        if tokens[ti] in ['all', 'remainder', 'rest']:
             amount = None
+            ti = ti + 1
         else:
-            amount = self.parse_amount_or_raise(tokens[1])
-        cmd = tokens[2].lower()
-        if cmd not in ['to', 'into', 'as']:
-            raise ParseError(self.reader, "allocation should be 'to', 'into', or 'as'")
-        cat_name = tokens[3]
+            amount = cents_from_str(tokens[ti])
+            if amount is not None:
+                if amount < 0:
+                    raise ParseError(self.reader, "allocation amounts must be positive")
+                ti = ti + 1
+        if tokens[0] == "put":
+            if tokens[ti] != 'into':
+                raise ParseError(self.reader, "parsing error: 'put' needs 'into' after amount")
+        else: # tokens[0] is "take"
+            if tokens[ti] != 'from':
+                raise ParseError(self.reader, "parsing error: 'take' needs 'from' after amount")
+        ti = ti + 1
+        try:
+            if tokens[ti] is 'envelope':
+                ti = ti + 1
+            cat_name = tokens[ti]
+        except IndexError:
+            raise ParseError(self.reader, "too few arguments")
+
+        alloc_remainder = self.commands[-1].amount
+        for a in self.commands[-1].allocations.values():
+            if a.amount is None:
+                raise ParseError(self.reader, "overallocated")
+            alloc_remainder -= a.amount
+        if amount is None:
+            if alloc_remainder == 0:
+                raise ParseError(self.reader, "overallocated")
+            amount = alloc_remainder
+        elif amount > alloc_remainder:
+            raise ParseError(self.reader, "overallocated")
+
         if not cat_name in self.ledger.categories:
             raise ParseError(self.reader, "category '%s' not defined" % cat_name)
         if cat_name in self.commands[-1].allocations:
@@ -347,7 +380,8 @@ class Parser(object):
     }
 
     continuation_commands = {
-        'allocate' : parse_transaction_allocate,
+        'put'      : parse_transaction_allocate,
+        'take'     : parse_transaction_allocate,
         'tag'      : parse_transaction_tag,
         'goal'     : parse_category_goal,
         'budget'   : parse_category_budget,

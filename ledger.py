@@ -48,9 +48,9 @@ class Allocation(LedgerObject):
 
 class Tag(LedgerObject):
     def __init__(self, val):
-        self.val = val
+        self.value = val
     def __hash__(self):
-        return hash(self.val)
+        return hash(self.value)
 
 class Property(LedgerObject):
     def __init__(self, key, value):

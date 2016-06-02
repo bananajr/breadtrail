@@ -58,7 +58,7 @@ def filter(ofx, lgr_txns):
     return sorted_ofx_txns
 
 
-def ofx_txn_to_ledger_txn(t):
+def ofx_txn_to_ledger_txn(t, account):
     #t.type    # unicode string: 'payment', 'credit'
     #t.date    # datetime.datetime
     #t.amount  # decimal.Decimal: negative for payments
@@ -68,15 +68,14 @@ def ofx_txn_to_ledger_txn(t):
     #t.sic
     #t.mcc
     #t.checknum
-    cents = cents_from_decimal(t.amount)
-    it = ImportedTransaction(t.date, cents_from_decimal(t.amount), account.name)
+    it = Transaction(cents_from_decimal(t.amount), t.date, account)
     it.description = str(t.payee)
 
     if t.memo and len(t.memo) > 0 and t.memo != t.payee:
-        it.properties['bank_memo'] = str(t.memo)
+        it.properties['bank_memo'] = Property('bank_memo', str(t.memo))
     if t.id and len(t.id) > 0:
-        it.properties['bank_id'] = str(t.id)
-    it.tags.append("import_unverified")
+        it.properties['bank_id'] = Property('bank_id', str(t.id))
+    it.tags.add(Tag("import_unverified"))
     return it
 
 
@@ -92,24 +91,31 @@ def finalize_ledger_txn(it):
 
 def print_txn(t, f):
     datestr = datetime_to_date_str(t.date)
-    dirstr = "from" if t.amount < 0 else "into"
+    dirstr = "from" if t.sign == -1 else "into"
     amtstr = cents_to_str(t.amount if t.amount >= 0 else -t.amount)
-    line = (datestr, " $", amtstr, " ", dirstr, " ", t.account_name, " ", quote_str(t.description))
+    line = (datestr, " $", amtstr, " ", dirstr, " ", t.account.name, " ", quote_str(t.description))
     for tok in line: f.write(tok)
     f.write("\n")
     for (cat_name, a) in t.allocations.iteritems():
-        if not a.amount:
-            line = ("    allocate all to ", cat_name)
+        if t.sign == -1:
+            if not a.amount:
+                line = ("    take all from ", cat_name)
+            else:
+                line = ("    take $", cents_to_str(a.amount), " from ", cat_name)
         else:
-            line = ("    allocate $", cents_to_str(a.amount), " to ", cat_name)
+            if not a.amount:
+                line = ("    put all into ", cat_name)
+            else:
+                line = ("    put $", cents_to_str(a.amount), " into ", cat_name)
+
         for tok in line: f.write(tok)
         f.write("\n")
     for tag in t.tags:
         f.write("    tag ")
-        f.write(quote_str_if_needed(tag))
+        f.write(quote_str_if_needed(tag.value))
         f.write("\n")
-    for key, value in t.properties.iteritems():
-        line = ("    ", key, ": ", quote_str_if_needed(value))
+    for p in t.properties.values():
+        line = ("    ", p.key, ": ", quote_str_if_needed(p.value))
         for tok in line: f.write(tok)
         f.write("\n")
 
@@ -153,10 +159,10 @@ if __name__ == "__main__":
     new_txns = filter(ofx, ltxns)
 
     for ot in new_txns:
-        lt = ofx_txn_to_ledger_txn(ot)
+        lt = ofx_txn_to_ledger_txn(ot, laccount)
         filter_transaction(ledger, lt)
         lt = finalize_ledger_txn(lt)
-        print_txn(lt, laccount, sys.stdout)
+        print_txn(lt, sys.stdout)
         print
 
     if (args.output_stats):

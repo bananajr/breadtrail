@@ -15,22 +15,29 @@ category "2016-08 boston trip"
     goal $2300
 category "motorcycle"
     goal $6,750
+category "transfer"
 
 2014-05-01 $55.55 from jake-alaska-cc "23 BARTELL DRUGS  SEA"   # testing filters
 
 
 2014-05-01 $3,148.29 into jake-chase-chk "Synapse Product Development"
-     allocate $2390 to mortgage
-     allocate $400 to "food:eating out"
-     allocate $358.29 to "emergency fund"
+    allocate $2390 to mortgage
+    allocate $400 to "food:eating out"
+    allocate $358.29 to "emergency fund"
+
+2015-05-26 $182.55 from jake-chase-chk "Transfer to Alaska Airlines Visa"
+    take all from "transfer"
 
 2014-05-03 $104.55 from jake-alaska-cc "Groceries from QFC at Broadway & Pike"
-     bank_memo: "QFC NO 178"
-     bankid: "2014052755"
-     allocate $28.99 to "food:booze"
-     allocate all to "food:groceries"
+    bank_memo: "QFC NO 178"
+    bankid: "2014052755"
+    take $28.99 from "food:booze"
+    take rest from envelope "food:groceries"
 
 2014-05-09 $78 from jake-alaska-cc "St. Cloud's Restaurant"
-     bank_memo: "ST CLOUDS N/A"
-     allocate all to "food:eating out"
+    bank_memo: "ST CLOUDS N/A"
+    take all from "food:eating out"
+
+2014-05-27 $182.55 into jake-alaska-cc "Transfer from Checking"
+    put all into envelope "transfer"
 
