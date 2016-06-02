@@ -116,7 +116,6 @@ class BreadTrail(cmdln.Cmdln):
             balances[t.account.name] += t.signed_amount()
             for (cat_name, a) in t.allocations.iteritems():
                 amount = a.amount
-                if isinstance(t, ExpenditureTransaction): amount = -amount
                 balances[a.category.name] += amount
 
         if len(names) == 0:
@@ -154,7 +153,6 @@ class BreadTrail(cmdln.Cmdln):
         for t in self.parser.ledger.transactions:
             if t.account is not account: continue
             amount = t.amount
-            if isinstance(t, ExpenditureTransaction): amount = -amount
             balance = balance + amount
             date = t.date
             desc = t.description or ''
@@ -180,7 +178,6 @@ class BreadTrail(cmdln.Cmdln):
                 continue
             a = t.allocations[cat.name]
             amount = a.amount
-            if isinstance(t, ExpenditureTransaction): amount = -amount
             balance = balance + amount
             print "%s %10s %10s %s" % (str(t.date.date()), cents_to_str(amount),
                     cents_to_str(balance), t.description)

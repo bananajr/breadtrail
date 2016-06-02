@@ -148,12 +148,11 @@ class Parser(object):
         if not tokens[3] in self.ledger.accounts:
             raise ParseError(self.reader, "account '%s' not defined" % tokens[3])
         account = self.ledger.accounts[tokens[3]]
-        if tokens[2].lower() == 'into':
-            t = IncomeTransaction(amount, date, account)
-        elif tokens[2].lower() == 'from':
-            t = ExpenditureTransaction(amount, date, account)
-        else:
+        if tokens[2].lower() == 'from':
+            amount = -amount
+        elif tokens[2].lower() != 'into':
             raise ParseError(self.reader, "transaction should be 'into' or 'from'")
+        t = Transaction(amount, date, account)
         t.line = line
         t.description = tokens[4]
         t.subcommands = []
@@ -211,7 +210,9 @@ class Parser(object):
     def parse_transaction_allocate(self, line):
         self.assert_transaction_subcommand(line.tokens[0].value)
 
-        # allocate (<amount>|all|remainder) (to|into|as) <category> 
+        # put [(<amount>|all|remainder)] into [envelope] <category> # for income (+amount)
+        # take [(<amount|all|remainder)] from [envelope] <category> # for expense (-amount)
+        # allocate (<amount>|all|remainder) (to|into|as) <category>
         tokens = line.token_values()
         if len(tokens) != 4:
             raise ParseError(self.reader, "wrong number of arguments")

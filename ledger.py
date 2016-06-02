@@ -23,29 +23,22 @@ class CategoryGoal(LedgerObject):
 
 
 class Transaction(LedgerObject):
-    def __init__(self, amount, date):
-        self.amount = amount
+    def __init__(self, amount, date, account):
+        if amount < 0:
+            self.sign = -1
+            self.amount = -amount
+        else:
+            self.sign = 1
+            self.amount = amount
         self.date = date
+        self.account = account
         self.description = None;
         self.allocations = {}  # map of category names to Allocations
         self.projected = False
         self.properties = {}   # map of key names to Properties
         self.tags = set()
-
-class IncomeTransaction(Transaction):
-    def __init__(self, amount, date, account):
-        super(IncomeTransaction, self).__init__(amount, date)
-        self.account = account
     def signed_amount(self):
-        return self.amount
-
-class ExpenditureTransaction(Transaction):
-    def __init__(self, amount, date, account):
-        super(ExpenditureTransaction, self).__init__(amount, date)
-        self.account = account
-    def signed_amount(self):
-        return -self.amount
-
+        return self.amount*self.sign
 
 class Allocation(LedgerObject):
     def __init__(self, amount, category):
