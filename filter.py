@@ -20,6 +20,10 @@ def atoi(str):
 
 
 _subs = [
+        # Income
+        ("SYNAPSE PROD(UCT)?\s+PAYROLL.*", "Synapse Product Development Payroll", "income:jake:salary"),
+        ("SYNAPSE PRODUCT\s+DIRECT.*", "Synapse Product Development Payroll", "income:jake:salary"),
+
         # Restaurants
         ("LITTLE WATER CANTINA.*", "Little Water Cantina", "food:restaurants"),
         ("MEXICO CANTINA.*", "Mexico Cantina", "food:restaurants"),
@@ -66,11 +70,20 @@ _subs = [
         ("THE HOME DEPOT 4702.*", "Home Depot (SODO)", "household"),
         ("LOWES #00004.*", "Lowes (Rainer Valley)", "household"),
 
+        # Monthly bills
+        ("COBALT MORTGAGE.*", "Cobalt Mortgage", "monthly:mortgage"),
+        ("SENECA MORTGAGE.*", "Seneca Mortgage", "monthly:mortgage"),
+        ("PEMCO INS PYMT.*", "Pemco Insurance Payment", "car:insurance"),
+        ("PUGET SOUND ENER ONLINE PMT.*", "Puget Sound Energy", "monthly:utilities"),
+        ("SEATTLEUTILTIES", "Seattle City Utilities", "monthly:utilities"),
+        ("SEATTLE UTILITY\s+WEB DEBIT.*", "Seattle City Utilities", "monthly:utilities"),
+        ("SEATTLE LIGHT\s+WEB DEBIT.*", "Seattle City Light", "monthly:utilities"),
         ("COMCAST CABLE.*", "Comcast", "monthly:comms"),
+        ("AT&T\s+PAYMENT.*", "AT&T Payment", "monthly:comms"),
         ("DREAMHOST DH-FEE.*", "DreamHost", "monthly:comms"),
         ("DreamHost dh-fee.*", "DreamHost", "monthly:comms"),
         ("Dropbox\*", "DropBox", "monthly:comms"),
-        ("GOOGLE \*Google Storage", "Google Cloud Storage", "montly:comms"),
+        ("GOOGLE \*Google Storage", "Google Cloud Storage", "monthly:comms"),
         ("NETFLIX.COM.*", "Netflix", "entertainment"),
         ("ADY\*Spotify.*", "Spotify", "entertainment"),
         ("HLU\*Hulu.*", "Hulu", "entertainment"),
@@ -78,9 +91,9 @@ _subs = [
         ("APL.*ITUNES.COM.*", "Apple iTunes Bill", None),
         ("APL*APPLE ONLINE STORE.*", "Apple Online Store", None),
         ("A.*AMZN.COM/BILL.*", "Amazon.com", None),
-        ("AMAZON MKTPLACE PMTS.*", "Amazon.com", None),
 
         # Other merchants
+        ("AMAZON MKTPLACE PMTS.*", "Amazon.com", None),
         ("ELLIOTT BAY BOOK.*", "Elliot Bay Book Company", "books"),
         ("MADRONA WINE MERCHANTS.*", "Madrona Wine Merchants", "food:booze"),
         ("WASHINGTON ATHLETIC CLUB.*", "Washington Athletic Club", "gym"),
@@ -92,7 +105,12 @@ _subs = [
         ("GREEN LAKE JEWELRY.*", "Greenlake Jewelry", "gifts_for_us"),
 
         # Transfers, fees, and other financial things
-        ("BA ELECTRONIC PAYMENT", "Credit Card Payment", "transfer"),
+        ("ATM WITHDRAWAL.*", "ATM Withdrawal", "transfer:cash"),
+        ("NON-CHASE ATM WITHDRAW.*", "ATM Withdrawal (Out of Network)", "transfer:cash"),
+        ("NON-CHASE ATM FEE.*", "Out-of-network ATM Fee", "fees"),
+        ("BA ELECTRONIC PAYMENT.*", "Credit Card Payment (Jake's Alaska Airlines Visa)", "transfer"),
+        ("BK OF AMER VI/MC ONLINE PMT.*", "Credit Card Payment (Jake's Alaska Airlines Visa)", "transfer"),
+        ("CITI AUTOPAY.*", "Credit Card Payment (Jake's Citibank Visa)", "transfer"),
         ]
 @add_filter
 def filter_subs(ledger, t):
@@ -100,7 +118,7 @@ def filter_subs(ledger, t):
     for s in _subs:
         match = re.match(s[0], t.description)
         if match:
-            t.properties['bank_memo'] = Property('bank_memo', t.description)
+            t.properties['bank_description'] = Property('bank_description', t.description)
             t.description = match.expand(s[1])
             if len(s) > 2 and s[2] is not None:
                 t.allocations = { s[2]: Allocation(t.amount, ledger.categories[s[2]]) }
