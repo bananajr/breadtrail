@@ -7,7 +7,7 @@ from config import config
 import sys
 import argparse
 
-from import_filter import filter_imported_transaction
+from filter import filter_transaction
 
 
 
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     for ot in new_txns:
         lt = ofx_txn_to_ledger_txn(ot, laccount)
-        lt = filter_imported_transaction(lt)
+        lt = filter_transaction(lt)
         lt = finalize_ledger_txn(lt, laccount)
         print_txn(lt, sys.stdout)
         print

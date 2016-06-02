@@ -1,28 +1,35 @@
-class Account(object):
+class LedgerObject(object):
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+    def __ne__(self, other):
+        return not self == other
+
+
+class Account(LedgerObject):
     def __init__(self, name, description=None):
         self.name = name
         self.description = description
 
 
-class Category(object):
+class Category(LedgerObject):
     def __init__(self, name, description=None):
         self.name = name
         self.description = description
         self.goal = None
 
-class CategoryGoal(object):
+class CategoryGoal(LedgerObject):
     def __init__(self, amount):
         self.amount = amount
 
 
-class Transaction(object):
+class Transaction(LedgerObject):
     def __init__(self, amount, date):
         self.amount = amount
         self.date = date
         self.description = None;
-        self.allocations = {}
+        self.allocations = {}  # map of category names to Allocations
         self.projected = False
-        self.properties = {}
+        self.properties = {}   # map of key names to Properties
         self.tags = set()
 
 class IncomeTransaction(Transaction):
@@ -40,21 +47,19 @@ class ExpenditureTransaction(Transaction):
         return -self.amount
 
 
-class Allocation(object):
+class Allocation(LedgerObject):
     def __init__(self, amount, category):
         self.amount = amount
         self.category = category
         self.tags = []
 
-class Tag(object):
+class Tag(LedgerObject):
     def __init__(self, val):
         self.val = val
     def __hash__(self):
         return hash(self.val)
-    def __cmp__(self, other):
-        return cmp(self.val, other.val)
 
-class Property(object):
+class Property(LedgerObject):
     def __init__(self, key, value):
         self.key = key
         self.value = value

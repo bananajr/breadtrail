@@ -4,6 +4,7 @@ from ledger import *
 from type_utils import *
 import parser
 from config import config
+from filter import filter_transaction
 
 import cmdln
 import sys, os
@@ -42,8 +43,8 @@ class BreadTrail(cmdln.Cmdln):
                 os.remove(self.filename + '_')
                 return True
 
-        out_stack = [writer(self.parser.filename + '_')]
-        print ">>> output is now going to " + out_stack[-1].filename
+        out_stack = [writer(self.parser.filename)]
+        #print ">>> output is now going to " + out_stack[-1].filename
         for cmd in self.parser.commands:
             if cmd.line:
                 out_stack[-1].write(cmd.line.raw_line)
@@ -52,14 +53,16 @@ class BreadTrail(cmdln.Cmdln):
                     if scmd.line:
                         out_stack[-1].write(scmd.line.raw_line)
             if isinstance(cmd, ImportFile):
-                out_stack.append(writer(cmd.path + '_'))
-                print ">>> output is now going to " + out_stack[-1].filename
+                out_stack.append(writer(cmd.path))
+                #print ">>> output is now going to " + out_stack[-1].filename
             elif isinstance(cmd, EndOfFile):
                 last_writer = out_stack.pop()
                 if last_writer.finish_and_test_same():
-                    print ">>> no difference when writing %s; deleting tmp file" % last_writer.filename
+                    pass
+                #    print ">>> no difference when writing %s; deleting tmp file" % last_writer.filename
                 if len(out_stack) > 0: # still going
-                    print ">>> output is back to " + out_stack[-1].filename
+                    pass
+                #    print ">>> output is back to " + out_stack[-1].filename
 
 
     def get_optparser(self):
@@ -81,33 +84,59 @@ class BreadTrail(cmdln.Cmdln):
         self._parse_ledger()
         self._write_ledger()
 
+    def do_filter(self, subcmd, opts):
+        """${cmd_name}: filter the register
+
+        ${cmd_usage}
+        ${cmd_option_list}
+        """
+        self._parse_ledger()
+        for t in self.parser.ledger.transactions:
+            if filter_transaction(self.parser.ledger, t):
+                self.parser.update_transaction(t)
+        self._write_ledger()
+
     @cmdln.option("--date", help="compute the balance on the given date")
     @cmdln.alias("bal")
-    def do_balance(self, subcmd, opts, *account_names):
+    def do_balance(self, subcmd, opts, *names):
         """${cmd_name}: compute the balance of an account
 
         ${cmd_usage}
         ${cmd_option_list}
         """
         self._parse_ledger()
+        L = self.parser.ledger
 
         date = datetime_from_str(opts.date) if opts.date else None
 
-        keys = self.parser.ledger.accounts.keys()
+        keys = sorted(L.accounts.keys()) + sorted(L.categories.keys())
         balances = dict(zip(keys, [0]*len(keys)))
-        for t in self.parser.ledger.transactions:
+        for t in L.transactions:
             if date and t.date > date: continue
             balances[t.account.name] += t.signed_amount()
+            for (cat_name, a) in t.allocations.iteritems():
+                amount = a.amount
+                if isinstance(t, ExpenditureTransaction): amount = -amount
+                balances[a.category.name] += amount
 
-        if len(account_names) == 0:
-            for name, amount in balances.iteritems():
-                print "%s: %s" % (name, cents_to_str(amount))
+        if len(names) == 0:
+            names_list = keys
         else:
-            for name in account_names:
-                if not name in balances:
-                    print "Error: unknown account name '%s'." % name
-                    return
-                print "%s: %s" % (name, cents_to_str(balances[name]))
+            names_list = []
+            for name in names:
+                if name == 'accounts':
+                    names_list.extend(sorted(L.accounts.keys()))
+                elif name == 'categories' or name == 'envelopes':
+                    names_list.extend(sorted(L.categories.keys()))
+                elif name == 'all':
+                    names_list.extend(sorted(L.accounts.keys()))
+                    names_list.extend(sorted(L.categories.keys()))
+
+        for name in names_list:
+            if not name in balances:
+                print "Error: unknown account or category name '%s'." % name
+                return
+            print "%s: %s" % (name, cents_to_str(balances[name]))
 
     @cmdln.alias("reg")
     def do_register(self, subcmd, opts, account):
@@ -147,13 +176,14 @@ class BreadTrail(cmdln.Cmdln):
         for t in self.parser.ledger.transactions:
             factor = 1 
             desc = t.description or ''
-            for a in t.allocations:
-                if a.category is not cat: continue
-                amount = a.amounts
-                if isinstance(t, ExpenditureTransaction): amount = -amount
-                balance = balance + amount
-                print "%s %10s %10s %s" % (str(t.date.date()), cents_to_str(amount),
-                        cents_to_str(balance), t.description)
+            if not cat.name in t.allocations:
+                continue
+            a = t.allocations[cat.name]
+            amount = a.amount
+            if isinstance(t, ExpenditureTransaction): amount = -amount
+            balance = balance + amount
+            print "%s %10s %10s %s" % (str(t.date.date()), cents_to_str(amount),
+                    cents_to_str(balance), t.description)
 
     @cmdln.option("-i", "--init-stmt",     help="")
     @cmdln.option("-p", "--process-stmt",  help="")

@@ -21,7 +21,7 @@ def cents_to_str(c):
         return "%d.%02d" % (c//100, c % 100)
     else:
         nc = -c
-        return "(%d.%02d)" % (nc//100, nc % 100)
+        return "-%d.%02d" % (nc//100, nc % 100)
 
 def cents_from_decimal(d):
     return int(d*100)
@@ -42,15 +42,18 @@ def datetime_from_str(str):
 
 
 
-_find_unsafe = re.compile(r'[a-zA-Z0-9_^@%+=:,./-] \t\r\n').search
+_safe_re = re.compile('[\'" \t]')
+def _find_unsafe(s):
+    return _safe_re.search(s)
 
 def quote_str(s):
-    # use single quotes, and put single quotes into double quotes
-    # the string $'b is then quoted as '$'"'"'b'
-    return "\"" + s.replace("\"", "\\\"") + "\""
+    if '\"' in s and '\'' not in s:
+        return '\'' + s.replace("\"", "\\\"") + '\''
+    else:
+        return "\"" + s.replace("\"", "\\\"") + "\""
 
 def quote_str_if_needed(s):
-    return s if not _find_unsafe(s) is None else quote_str(s)
+    return s if not _find_unsafe(s) else quote_str(s)
 
 _acronyms = [
         'TCP', 'UDP',

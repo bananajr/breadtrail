@@ -2,23 +2,22 @@ account jake-alaska-cc "Jake's Alaska Airlines Bank of America Visa"
 account jake-chase-chk "Jake's Chase Checking Account"
 
 category "food:fast food"
-    budget $400 per month
 category "food:eating out"
-    budget: $2400 per quarter
 category "food:groceries"
-    budget: $1200 per quarter
 category "food:booze"
-    budget: $200 per month
 category "mortgage"
-    goal $2390 always
+    goal $2390
 category "monthly:utilities"
-    goal $190 always
+    goal $190
 category "emergency fund"
-    goal $30,000 always
+    goal $30,000
 category "2016-08 boston trip"
-    goal $2300 by 2016-08-01
+    goal $2300
 category "motorcycle"
     goal $6,750
+
+2014-05-01 $55.55 from jake-alaska-cc "23 BARTELL DRUGS  SEA"   # testing filters
+
 
 2014-05-01 $3,148.29 into jake-chase-chk "Synapse Product Development"
      allocate $2390 to mortgage
@@ -29,7 +28,7 @@ category "motorcycle"
      bank_memo: "QFC NO 178"
      bankid: "2014052755"
      allocate $28.99 to "food:booze"
-     allocate as "food:groceries"
+     allocate all to "food:groceries"
 
 2014-05-09 $78 from jake-alaska-cc "St. Cloud's Restaurant"
      bank_memo: "ST CLOUDS N/A"

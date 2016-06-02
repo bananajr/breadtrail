@@ -1,6 +1,6 @@
 from ledger import *
 from type_utils import *
-import parser_tokenize
+from parser_tokenize import Token, Line, LineParseError
 
 import StringIO
 import datetime
@@ -28,6 +28,14 @@ class LineReader(object):
         self.linenum = 0
 
 
+# returns subcommands divided into (both, only_list1, only_list2)
+def intersect_subcommands(list1, list2):
+    both       = [x for x in list1 if x in list2]
+    only_list1 = [x for x in list1 if x not in list2]
+    only_list2 = [x for x in list2 if x not in list1]
+    return (both, only_list1, only_list2)
+
+
 
 class Parser(object):
 
@@ -46,6 +54,7 @@ class Parser(object):
     # returns true if the last top-level command has a 'subcommands' attribute
     def can_subcommand(self):
         return len(self.commands) > 0 and hasattr(self.commands[-1], 'subcommands')
+
 
     def parse_date_or_raise(self, str):
         d = datetime_from_str(str)
@@ -69,6 +78,18 @@ class Parser(object):
         self.commands.append(account)
         return account
 
+    def update_account(self, a):
+        a.line.tokens[1].value = a.name
+        if a.description:
+            if len(a.line.tokens) == 3:
+                a.line.tokens[2].value = a.description
+            else:
+                a.line.tokens.append(Token(a.description))
+        elif len(a.line.tokens) == 3:
+            a.line.tokens.pop(2)
+        a.line.rebuild()
+
+
     def parse_add_category(self, line):
         tokens = line.token_values()
         if len(tokens) < 2 or len(tokens) > 3:
@@ -81,6 +102,18 @@ class Parser(object):
         self.commands.append(cat)
         return cat
 
+    def update_category(self, c):
+        c.line.tokens[1].value = c.name
+        if c.description:
+            if len(c.line.tokens) == 3:
+                c.line.tokens[2].value = c.description
+            else:
+                c.line.tokens.append(Token(c.description))
+        elif len(c.line.tokens) == 3:
+            c.line.tokens.pop(2)
+        c.line.rebuild()
+
+
     def assert_category_subcommand(self, subcommand):
         self.assert_subcommand(Category, "category", subcommand)
 
@@ -89,15 +122,22 @@ class Parser(object):
         tokens = line.token_values()
         if len(tokens) != 2:
             raise ParseError(self.reader, "wrong number of arguments")
-        goal = CategoryGoal(tokens[1])
+        goal = CategoryGoal(cents_from_str(tokens[1]))
         goal.line = line
         if self.commands[-1].goal:
             raise ParseError(self.reader, "multiple goals for category")
         self.commands[-1].goal = goal
         self.commands[-1].subcommands.append(goal)
 
+    def update_category_goal(self, g):
+        g.line.tokens[1].value = '$' + cents_to_str(g.amount)
+        g.line.rebuild()
+
     def parse_category_budget(self, line):
         self.assert_category_subcommand('budget')
+        pass
+
+    def update_category_budget(self, b):
         pass
 
     def parse_transaction(self, date, line):
@@ -120,6 +160,51 @@ class Parser(object):
         self.ledger.transactions.append(t)
         self.commands.append(t)
 
+    def update_transaction(self, t):
+        if isinstance(t, IncomeTransaction):
+            if t.line.tokens[2].value.lower() is not 'into':
+                t.line.tokens[2].value = 'into'
+        else:
+            if t.line.tokens[2].value.lower() is not 'from':
+                t.line.tokens[2].value = 'from'
+        t.line.tokens[3].value = quote_str_if_needed(t.account.name)
+        t.line.tokens[4].value = quote_str(t.description)
+        t.line.rebuild()
+
+        # update, add, and remove allocation subcommands
+        (both, to_del, to_add) = intersect_subcommands(t.subcommands, t.allocations.values())
+        for a in both:
+            self.update_transaction_allocate(a)
+        for a in to_add:
+            self.update_transaction_allocate(a)
+            t.subcommands.append(a)
+        for a in to_del:
+            if not isinstance(a, Allocation): continue
+            t.subcommands.remove(a)
+
+        # update, add, and remove property subcommands
+        (both, to_del, to_add) = intersect_subcommands(t.subcommands, t.properties.values())
+        for prop in both:
+            self.update_transaction_property(prop)
+        for prop in to_add:
+            self.update_transaction_property(prop)
+            t.subcommands.append(prop)
+        for prop in to_del:
+            if not isinstance(prop, Property): continue
+            t.subcommands.remove(prop)
+
+        # update, add, and remove tag subcommands
+        (both, to_del, to_add) = intersect_subcommands(t.subcommands, t.tags)
+        for tag in both:
+            self.update_transaction_tag(tag)
+        for tag in to_add:
+            self.update_transaction_tag(tag)
+            t.subcommands.append(tag)
+        for tag in to_del:
+            if not isinstance(tag, Tag): continue
+            t.subcommands.remove(tag)
+
+
     def assert_transaction_subcommand(self, subcommand):
         self.assert_subcommand(Transaction, "transaction", subcommand)
 
@@ -134,8 +219,8 @@ class Parser(object):
             amount = None
         else:
             amount = self.parse_amount_or_raise(tokens[1])
-        cmd = tokens[2]
-        if cmd != 'to' and cmd != 'into' and cmd != 'as':
+        cmd = tokens[2].lower()
+        if cmd not in ['to', 'into', 'as']:
             raise ParseError(self.reader, "allocation should be 'to', 'into', or 'as'")
         cat_name = tokens[3]
         if not cat_name in self.ledger.categories:
@@ -147,6 +232,27 @@ class Parser(object):
         self.commands[-1].allocations[cat_name] = alloc
         self.commands[-1].subcommands.append(alloc)
 
+    def update_transaction_allocate(self, a):
+        if not hasattr(a, 'line'):
+            a.line = Line('    allocate $%s to %s\n' % (
+                    cents_to_str(a.amount),
+                    quote_str_if_needed(a.category.name)))
+            return
+        diff = False
+        if a.amount == None:
+            if a.line.tokens[1].value.lower() not in ['all', 'remainder']:
+                a.line.tokens[1] = 'all'
+                diff = True
+        elif a.amount != cents_from_str(a.line.tokens[1].value):
+            a.line.tokens[1] = '$' + cents_to_str(a.amount)
+            diff = True
+        if a.line.tokens[3] != a.category.name:
+            a.line.tokens[3] = a.category.name
+            diff = True
+        if diff:
+            a.line.rebuild()
+
+
     def parse_transaction_tag(self, line):
         self.assert_transaction_subcommand(line.tokens[0].value)
         tokens = line.token_values()
@@ -157,23 +263,42 @@ class Parser(object):
         self.commands[-1].tags.add(tag)
         self.commands[-1].subcommands.append(tag)
 
+    def update_transaction_tag(self, t):
+        if not hasattr(t, 'line'):
+            t.line = Line('    tag %s\n' % quote_str_if_needed(t.val))
+            return
+        if t.line.tokens[1].value != t.val:
+            t.line.tokens[1].value = t.val
+            t.line.rebuild()
+
+
     def parse_transaction_property(self, line):
         self.assert_transaction_subcommand(line.tokens[0].value)
         tokens = line.token_values()
         if len(tokens) != 2:
-            raise ParseError(self.reader, "wrong number of arguments")
+            raise parseerror(self.reader, "wrong number of arguments")
         key = tokens[0][0:-1]
-        value = tokens[1]
-        prop = Property(key, value)
+        prop = Property(key, tokens[1])
         prop.line = line
-        self.commands[-1].properties[key] = value
+        self.commands[-1].properties[key] = prop
         self.commands[-1].subcommands.append(prop)
+
+    def update_transaction_property(self, p):
+        if not hasattr(p, 'line'):
+            p.line = Line('    %s: %s\n' % (
+                    quote_str_if_needed(p.key),
+                    quote_str_if_needed(p.value)))
+            return
+        if p.line.tokens[0].value[0:-1] != p.key or p.line.tokens[1].value != p.value:
+            p.line.tokens[0].value = p.key + ':'
+            p.line.tokens[1].value = p.value
+            p.line.rebuild()
 
 
     def parse_import(self, line):
         tokens = line.token_values()
         if len(tokens) != 2:
-            raise ParseError(self.reader, "wrong number of arguments")
+            raise parseerror(self.reader, "wrong number of arguments")
         path = os.path.expanduser(tokens[1])
         if not os.path.isabs(path):
             cur_dir = os.path.dirname(self.reader.filename)
@@ -234,8 +359,8 @@ class Parser(object):
         for linenum, line in enumerate(self.reader.reader):
             self.reader.linenum = linenum + 1
             try:
-                tok_line = parser_tokenize.Line(line)
-            except parser_tokenize.LineParseError as error:
+                tok_line = Line(line)
+            except LineParseError as error:
                 raise ParseError(self.reader, str(error) + ' (column %d)' % error.index)
 
             # if no tokens, it's a blank line or comment
