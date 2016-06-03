@@ -98,8 +98,9 @@ class BreadTrail(cmdln.Cmdln):
 
     @cmdln.option("--date", help="compute the balance on the given date")
     @cmdln.alias("bal")
+    @cmdln.alias("abal")
     def do_balance(self, subcmd, opts, *names):
-        """${cmd_name}: compute the balance of an account
+        """${cmd_name}: compute the balance of one or more accounts
 
         ${cmd_usage}
         ${cmd_option_list}
@@ -109,34 +110,72 @@ class BreadTrail(cmdln.Cmdln):
 
         date = datetime_from_str(opts.date) if opts.date else None
 
-        keys = sorted(L.accounts.keys()) + sorted(L.categories.keys())
+        keys = L.accounts.keys()
         balances = dict(zip(keys, [Amount(0)]*len(keys)))
         for t in L.transactions:
             if date and t.date > date: continue
             balances[t.account.name] += t.signed_amount()
-            for (cat_name, a) in t.allocations.iteritems():
-                amount = a.amount
-                balances[a.category.name] += amount
 
         if len(names) == 0:
             names_list = keys
         else:
             names_list = []
             for name in names:
-                if name == 'accounts':
-                    names_list.extend(sorted(L.accounts.keys()))
-                elif name == 'categories' or name == 'envelopes':
-                    names_list.extend(sorted(L.categories.keys()))
-                elif name == 'all':
-                    names_list.extend(sorted(L.accounts.keys()))
-                    names_list.extend(sorted(L.categories.keys()))
-
+                if name == 'all':
+                    names_list.extend(L.accounts.keys())
+                else:
+                    names_list += name
         col = max(len(name) for name in names_list) + 2
+        total = Amount(0)
         for name in names_list:
             if not name in balances:
-                print "Error: unknown account or category name '%s'." % name
+                print "Error: unknown account name '%s'." % name
                 return
-            print (("%%-%ds" % col) + " %8s") % (name, str(balances[name]))
+            total += balances[name]
+            print (("%%-%ds" % col) + " %12s") % (name, str(balances[name]))
+        if len(names_list) > 0:
+            print (("%%-%ds" % col) + " %12s") % ("total:", total)
+
+    @cmdln.option("--date", help="compute the balance on the given date")
+    @cmdln.alias("ebal")
+    def do_envelope_balance(self, subcmd, opts, *names):
+        """${cmd_name}: compute the balance of one or more envelopes
+
+        ${cmd_usage}
+        ${cmd_option_list}
+        """
+        self._parse_ledger()
+        L = self.parser.ledger
+
+        date = datetime_from_str(opts.date) if opts.date else None
+
+        keys = sorted(L.categories.keys())
+        balances = dict(zip(keys, [Amount(0)]*len(keys)))
+        for t in L.transactions:
+            if date and t.date > date: continue
+            for (cat_name, a) in t.allocations.iteritems():
+                amount = a.amount
+                balances[a.category.name] += amount*t.sign
+
+        if len(names) == 0:
+            names_list = keys
+        else:
+            names_list = []
+            for name in names:
+                if name == 'all':
+                    names_list.extend(sorted(L.categories.keys()))
+                else:
+                    names_list += name
+        col = max(len(name) for name in names_list) + 2
+        total = Amount(0)
+        for name in names_list:
+            if not name in balances:
+                print "Error: unknown category name '%s'." % name
+                return
+            total += balances[name]
+            print (("%%-%ds" % col) + " %12s") % (name, str(balances[name]))
+        if len(names_list) > 0:
+            print (("%%-%ds" % col) + " %12s") % ("total:", total)
 
     @cmdln.alias("reg")
     def do_register(self, subcmd, opts, account):
