@@ -108,7 +108,6 @@ class Parser(object):
             c.line.tokens.pop(2)
         c.line.rebuild()
 
-
     def assert_category_subcommand(self, subcommand):
         self.assert_subcommand(Category, "category", subcommand)
 
@@ -155,7 +154,7 @@ class Parser(object):
         self.commands.append(t)
 
     def update_transaction(self, t):
-        if isinstance(t, IncomeTransaction):
+        if t.sign == 1:
             if t.line.tokens[2].value.lower() is not 'into':
                 t.line.tokens[2].value = 'into'
         else:
@@ -165,7 +164,7 @@ class Parser(object):
         t.line.tokens[4].value = quote_str(t.description)
         t.line.rebuild()
 
-        # update, add, and remove allocation subcommands
+        # update, add, and remove allocation subcommands to match t.allocations
         (both, to_del, to_add) = intersect_subcommands(t.subcommands, t.allocations.values())
         for a in both:
             self.update_transaction_allocate(a)
@@ -176,7 +175,26 @@ class Parser(object):
             if not isinstance(a, Allocation): continue
             t.subcommands.remove(a)
 
-        # update, add, and remove property subcommands
+        # update the remainder allocation subcommand to match t.remainder_allocation
+        self.update_transaction_remainder_allocation(t.remainder_allocation)
+        (ra_sc, ra_sc_idx) = next(((i, sc) for i,sc in enumerate(t.subcommands) \
+                if isinstance(sc, RemainderAllocation)), (None, -1))
+        if ra_sc == t.remainder_allocation:
+            pass
+        elif ra_sc == None:
+            # need to add it to subcommands (after any Allocation subcommands)
+            a_sc_idx = -1
+            for a_sc_idx in [i for i,sc in enumerate(t.subcommands) if isinstance(sc, Allocation)]:
+                pass
+            t.subcommands.insert(a_sc_idx + 1, t.remainder_allocation)
+        elif t.remainder_allocation == None:
+            # need to delete it from subcommands
+            del t.subcommands[ra_sc_idx]
+        else:
+            # need to replace it in subcommands
+            t.subcommands[ra_sc_idx] = t.remainder_allocation
+
+        # update, add, and remove property subcommands to match t.properties
         (both, to_del, to_add) = intersect_subcommands(t.subcommands, t.properties.values())
         for prop in both:
             self.update_transaction_property(prop)
@@ -187,7 +205,7 @@ class Parser(object):
             if not isinstance(prop, Property): continue
             t.subcommands.remove(prop)
 
-        # update, add, and remove tag subcommands
+        # update, add, and remove tag subcommands to match t.tags
         (both, to_del, to_add) = intersect_subcommands(t.subcommands, t.tags)
         for tag in both:
             self.update_transaction_tag(tag)
@@ -203,78 +221,61 @@ class Parser(object):
         self.assert_subcommand(Transaction, "transaction", subcommand)
 
     def parse_transaction_allocate(self, line):
-        # put [(<amount>|all|remainder)] into [envelope] <category> # for income (+amount)
-        # take [(<amount|all|remainder)] from [envelope] <category> # for expense (-amount)
+        # put [(<amount>|all|rest)] into <category>  # for income (+amount)
+        # take [(<amount>|all|rest)] from <category> # for expense (-amount)
         self.assert_transaction_subcommand(line.tokens[0].value)
+        ptxn = self.commands[-1]
         tokens = line.token_values()
+        if len(tokens) != 4:
+            raise ParseError(self.reader, "wrong number of arguments (%d); should be 4" % len(tokens))
         if tokens[0] == "put":
-            if self.commands[-1].sign != 1:
+            if ptxn.sign != 1:
                 raise ParseError(self.reader, "'put' allocation for income transaction")
         else: # tokens[0] is "take"
-            if self.commands[-1].sign != -1:
+            if ptxn.sign != -1:
                 raise ParseError(self.reader, "'take' allocation for expenditure transaction")
-        tokens = line.token_values()
-        if len(tokens) < 3:
-            raise ParseError(self.reader, "need at least 2 arguments")
-        ti = 1
-        if tokens[ti] in ['all', 'remainder', 'rest']:
-            amount = None
-            ti = ti + 1
-        else:
-            try:
-                amount = Amount(tokens[ti])
-                if amount < 0:
-                    raise ParseError(self.reader, "allocation amounts must be positive")
-                ti = ti + 1
-            except ValueError:
-                amount = None
-        if tokens[0] == "put":
-            if tokens[ti] != 'into':
-                raise ParseError(self.reader, "parsing error: 'put' needs 'into' after amount")
-        else: # tokens[0] is "take"
-            if tokens[ti] != 'from':
-                raise ParseError(self.reader, "parsing error: 'take' needs 'from' after amount")
-        ti = ti + 1
-        try:
-            if tokens[ti] is 'envelope':
-                ti = ti + 1
-            cat_name = tokens[ti]
-        except IndexError:
-            raise ParseError(self.reader, "too few arguments")
 
-        alloc_remainder = self.commands[-1].amount
-        for a in self.commands[-1].allocations.values():
-            if a.amount is None:
-                raise ParseError(self.reader, "overallocated")
-            alloc_remainder -= a.amount
-        if amount is None:
-            if alloc_remainder == 0:
-                raise ParseError(self.reader, "overallocated")
-            amount = alloc_remainder
-        elif amount > alloc_remainder:
-            raise ParseError(self.reader, "overallocated")
-
+        cat_name = tokens[3]
         if not cat_name in self.ledger.categories:
             raise ParseError(self.reader, "category '%s' not defined" % cat_name)
-        if cat_name in self.commands[-1].allocations:
+        if cat_name in ptxn.allocations:
             raise ParseError(self.reader, "multiple allocations to same category")
-        alloc = Allocation(amount, self.ledger.categories[cat_name])
+        cat = self.ledger.categories[cat_name]
+
+        if tokens[1] in ['all', 'rest', 'remainder']:
+            if ptxn.remainder_allocation != None:
+                raise ParseError(self.reader, "multiple all/remainder allocations")
+            alloc = RemainderAllocation(ptxn, cat)
+            ptxn.remainder_allocation = alloc
+        else:
+            try:
+                amount = Amount(tokens[1])
+                if amount < 0:
+                    raise ParseError(self.reader, "allocation amounts must be positive")
+                alloc = Allocation(ptxn, amount, cat)
+                ptxn.allocations[cat_name] = alloc
+            except ValueError:
+                raise ParseError("invalid amount")
+        if ptxn.sign == 1:
+            if tokens[2] != 'into':
+                raise ParseError(self.reader, "'put' needs 'into' after amount")
+        else: # tokens[0] is "take"
+            if tokens[2] != 'from':
+                raise ParseError(self.reader, "'take' needs 'from' after amount")
         alloc.line = line
-        self.commands[-1].allocations[cat_name] = alloc
-        self.commands[-1].subcommands.append(alloc)
+        ptxn.subcommands.append(alloc)
 
     def update_transaction_allocate(self, a):
         if not hasattr(a, 'line'):
-            a.line = Line('    allocate $%s to %s\n' % (
-                    cents_to_str(a.amount),
-                    quote_str_if_needed(a.category.name)))
+            if a.parent_txn.sign == 1:
+                a.line = Line('    put $%s into %s\n' % (str(a.amount),
+                     quote_str_if_needed(a.category.name)))
+            else:
+                a.line = Line('    take $%s from %s\n' % (str(a.amount),
+                     quote_str_if_needed(a.category.name)))
             return
         diff = False
-        if a.amount == None:
-            if a.line.tokens[1].value.lower() not in ['all', 'remainder', 'rest']:
-                a.line.tokens[1] = 'all'
-                diff = True
-        elif a.amount != amount_from_str_or_none(a.line.tokens[1].value):
+        if a.amount != amount_from_str_or_none(a.line.tokens[1].value):
             a.line.tokens[1] = '$' + cents_to_str(a.amount)
             diff = True
         if a.line.tokens[3] != a.category.name:
@@ -282,6 +283,19 @@ class Parser(object):
             diff = True
         if diff:
             a.line.rebuild()
+
+    def update_transaction_remainder_allocation(self, ra):
+        if ra == None:
+            return
+        if not hasattr(ra, 'line'):
+            if ra.parent_txn.sign == 1:
+                ra.line = Line('    put all into %s\n' % quote_str_if_needed(ra.category.name))
+            else:
+                ra.line = Line('    take all from %s\n' % quote_str_if_needed(ra.category.name))
+            return
+        if ra.line.tokens[3] != ra.category.name:
+            ra.line.tokens[3] = ra.category.name
+            ra.line.rebuild()
 
 
     def parse_transaction_tag(self, line):
@@ -298,8 +312,8 @@ class Parser(object):
         if not hasattr(t, 'line'):
             t.line = Line('    tag %s\n' % quote_str_if_needed(t.val))
             return
-        if t.line.tokens[1].value != t.val:
-            t.line.tokens[1].value = t.val
+        if t.line.tokens[1].value != t.value:
+            t.line.tokens[1].value = t.value
             t.line.rebuild()
 
 
@@ -343,27 +357,11 @@ class Parser(object):
         self.commands.extend(p.commands)
 
 
-
-
-
     def finalize_transaction(self, t):
-        alloc_total = Amount(0)
         remainder_alloc = None
-        for alloc in t.allocations.values():
-            if alloc.amount == None:
-                if remainder_alloc:
-                    raise ParseError(self.reader, 'multiple remainder categories in transaction')
-                remainder_alloc = alloc
-                continue
-            alloc_total = alloc_total + alloc.amount
+        alloc_total = Amount(sum([a.amount for a in t.allocations.values()], Amount(0)))
         if alloc_total > t.amount:
             raise ParseError(self.reader, 'total of allocations is greater than transaction amount')
-        if alloc_total < t.amount:
-            r = t.amount - alloc_total
-            if remainder_alloc:
-                remainder_alloc.amount = r
-            else:
-                t.allocations['unallocated'] = Allocation(r, self.ledger.categories['unallocated'])
 
     def finalize_last_command(self):
         if len(self.commands) > 0 and isinstance(self.commands[-1], Transaction):

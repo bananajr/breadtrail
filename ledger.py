@@ -1,4 +1,5 @@
 from type_utils import cents_from_str
+from sys import maxint
 
 
 class Amount(object):
@@ -95,7 +96,7 @@ def amount_from_str_or_none(s):
 
 class LedgerObject(object):
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return isinstance(other, LedgerObject) and self.__dict__ == other.__dict__
     def __ne__(self, other):
         return not self == other
 
@@ -130,6 +131,7 @@ class Transaction(LedgerObject):
         self.account = account
         self.description = None;
         self.allocations = {}  # map of category names to Allocations
+        self.remainder_allocation = None
         self.projected = False
         self.properties = {}   # map of key names to Properties
         self.tags = set()
@@ -138,6 +140,24 @@ class Transaction(LedgerObject):
         fmt = "%s %s " + ("from" if self.sign == -1 else "into") + " %s: %s"
         return fmt % (self.date, self.amount, self.account.name, self.description)
 
+    def __hash__(self):
+        if 'bank_description' in self.properties:
+            desc = self.properties['bank_description'].value
+        else:
+            desc = self.description
+        return hash((self.amount, self.sign, self.date, desc))
+
+    def id(self):
+        h = hash(self)
+        if h < 0: h = maxint + h + 1
+        hexstr = hex(h)
+        if hexstr.startswith('0x') or hexstr.startswith('0X'):
+            hexstr = hexstr[2:]
+        if len(hexstr) < 6:
+            return '0'*(6-len(hexstr)) + hexstr
+        else:
+            return hexstr[0:6]
+
     def signed_amount(self):
         return self.amount*self.sign
 
@@ -145,15 +165,12 @@ class Transaction(LedgerObject):
         return re.match(self.description, pattern)
 
     def unallocated_amount(self):
-        remainder = Amount(self.amount)
-        for (cat_name, a) in self.allocations:
-            if a.amount != None:
-                remainder -= a.amount
-            else:
-                remainder = Amount(0)
-        return remainder
-
-
+        if self.remainder_allocation != None:
+            return Amount(0)
+        remainder_amount = self.amount
+        for a in self.allocations.values():
+            remainder_amount -= a.amount
+        return remainder_amount
 
     def allocate_to(self, category_name, amount=None):
         amount = mk_amount(amount)
@@ -163,16 +180,26 @@ class Transaction(LedgerObject):
         if category_name in self.allocations:
             self.allocations[category_name].amount = amount;
         else:
-            self.allocations[category_name] = Allocation(amount, category_name)
+            self.allocations[category_name] = Allocation(self, amount, category_name)
 
 
 class Allocation(LedgerObject):
-    def __init__(self, amount, category):
+    def __init__(self, txn, amount, category):
+        self.parent_txn = txn
         self.amount = mk_amount(amount)
         self.category = category
         self.tags = []
     def __repr__(self):
-        return "%s->%s" % (self.amount, self.category.name)
+        return "%s->%s" % (str(self.amount), self.category.name)
+
+class RemainderAllocation(LedgerObject):
+    def __init__(self, txn, category):
+        self.parent_txn = txn
+        self.category = category
+        self.tags = []
+    def __repr__(self):
+        return "all->%s" % self.category.name
+
 
 class Tag(LedgerObject):
     def __init__(self, val):
