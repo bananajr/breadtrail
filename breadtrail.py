@@ -183,10 +183,11 @@ class BreadTrail(cmdln.Cmdln):
             print "%s %10s %10s %s" % (str(t.date.date()), cents_to_str(amount),
                     cents_to_str(balance), t.description)
 
+    @cmdln.option("-s", "--select-expn",   help="")
     @cmdln.option("-i", "--init-stmt",     help="")
     @cmdln.option("-p", "--process-stmt",  help="")
     @cmdln.option("-f", "--finalize-stmt", help="")
-    def do_report(self, subcmd, opts, select_expn):
+    def do_report(self, subcmd, opts, t_var_name):
         """${cmd_name}: generate reports
 
         ${cmd_usage}
@@ -194,12 +195,14 @@ class BreadTrail(cmdln.Cmdln):
         """
         self._parse_ledger()
 
-        match = re.match('(lambda\s+)?(\w+):(.*)', select_expn)
-        if not match:
-            print "Error: unexpected syntax in 'select' statement."
-            return
-        select_expn = 'lambda %s: %s' % match.group(2, 3)
-        select = compile(select_expn, '<string>', 'eval')
+        if not opts.select_expn:
+            select = None
+        else:
+            match = re.match('(lambda\s+)?(\w+):(.*)', select_expn)
+            if not match:
+                print "Error: unexpected syntax in 'select' expression."
+                return
+            select = compile('lambda %s: %s' % (t_var_name, select_expn), '<string>', 'eval')
 
         if not opts.init_stmt:
             init = None
@@ -207,14 +210,7 @@ class BreadTrail(cmdln.Cmdln):
             init = compile(opts.init_stmt, '<string>', 'exec')
 
         if not opts.process_stmt:
-            process_param = 't'
-            opts.process_stmt  = 'print t'
-        else:
-            match = re.match('(\s+)?(\w+):\s*(.*)', opts.process_stmt)
-            if not match:
-                print "Error: unexpected syntax in 'process' statement."
-                return
-            (process_param, opts.process_stmt) = match.group(2, 3)
+            opts.process_stmt  = 'print %s' % t_var_name
         process = compile(opts.process_stmt, '<string>', 'exec')
 
         if not opts.finalize_stmt:
@@ -226,9 +222,9 @@ class BreadTrail(cmdln.Cmdln):
         if init:
             exec(init, context)
         for t in self.parser.ledger.transactions:
-            if not eval(select, context)(t):
+            if select != None and not eval(select, context)(t):
                 continue
-            context[process_param] = t
+            context[t_var_name] = t
             exec(process, context)
         if finalize:
             exec(finalize, context)
