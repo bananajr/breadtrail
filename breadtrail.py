@@ -110,7 +110,7 @@ class BreadTrail(cmdln.Cmdln):
         date = datetime_from_str(opts.date) if opts.date else None
 
         keys = sorted(L.accounts.keys()) + sorted(L.categories.keys())
-        balances = dict(zip(keys, [0]*len(keys)))
+        balances = dict(zip(keys, [Amount(0)]*len(keys)))
         for t in L.transactions:
             if date and t.date > date: continue
             balances[t.account.name] += t.signed_amount()
@@ -131,11 +131,12 @@ class BreadTrail(cmdln.Cmdln):
                     names_list.extend(sorted(L.accounts.keys()))
                     names_list.extend(sorted(L.categories.keys()))
 
+        col = max(len(name) for name in names_list) + 2
         for name in names_list:
             if not name in balances:
                 print "Error: unknown account or category name '%s'." % name
                 return
-            print "%s: %s" % (name, cents_to_str(balances[name]))
+            print (("%%-%ds" % col) + " %8s") % (name, str(balances[name]))
 
     @cmdln.alias("reg")
     def do_register(self, subcmd, opts, account):

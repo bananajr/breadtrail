@@ -61,11 +61,6 @@ class Parser(object):
         if d: return d
         raise ParseError(self.reader, "invalid date '%s'" % str)
 
-    def parse_amount_or_raise(self, str):
-        a = cents_from_str(str)
-        if a is not None: return a
-        raise ParseError(self.reader, "invalid amount '%s'" % str)
-
 
     def parse_add_account(self, line):
         tokens = line.token_values()
@@ -122,7 +117,7 @@ class Parser(object):
         tokens = line.token_values()
         if len(tokens) != 2:
             raise ParseError(self.reader, "wrong number of arguments")
-        goal = CategoryGoal(cents_from_str(tokens[1]))
+        goal = CategoryGoal(Amount(tokens[1]))
         goal.line = line
         if self.commands[-1].goal:
             raise ParseError(self.reader, "multiple goals for category")
@@ -144,7 +139,7 @@ class Parser(object):
         tokens = line.token_values()
         if len(tokens) != 5:
             raise ParseError(self.reader, "wrong number of arguments (%d)" % len(tokens))
-        amount = self.parse_amount_or_raise(tokens[1])
+        amount = Amount(tokens[1])
         if not tokens[3] in self.ledger.accounts:
             raise ParseError(self.reader, "account '%s' not defined" % tokens[3])
         account = self.ledger.accounts[tokens[3]]
@@ -226,11 +221,13 @@ class Parser(object):
             amount = None
             ti = ti + 1
         else:
-            amount = cents_from_str(tokens[ti])
-            if amount is not None:
+            try:
+                amount = Amount(tokens[ti])
                 if amount < 0:
                     raise ParseError(self.reader, "allocation amounts must be positive")
                 ti = ti + 1
+            except ValueError:
+                amount = None
         if tokens[0] == "put":
             if tokens[ti] != 'into':
                 raise ParseError(self.reader, "parsing error: 'put' needs 'into' after amount")
@@ -274,10 +271,10 @@ class Parser(object):
             return
         diff = False
         if a.amount == None:
-            if a.line.tokens[1].value.lower() not in ['all', 'remainder']:
+            if a.line.tokens[1].value.lower() not in ['all', 'remainder', 'rest']:
                 a.line.tokens[1] = 'all'
                 diff = True
-        elif a.amount != cents_from_str(a.line.tokens[1].value):
+        elif a.amount != amount_from_str_or_none(a.line.tokens[1].value):
             a.line.tokens[1] = '$' + cents_to_str(a.amount)
             diff = True
         if a.line.tokens[3] != a.category.name:
@@ -350,7 +347,7 @@ class Parser(object):
 
 
     def finalize_transaction(self, t):
-        alloc_total = 0
+        alloc_total = Amount(0)
         remainder_alloc = None
         for alloc in t.allocations.values():
             if alloc.amount == None:

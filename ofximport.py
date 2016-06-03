@@ -20,6 +20,15 @@ txn_count_imported = 0
 txn_count_new      = 0
 
 
+
+def amount_from_decimal(d):
+    return Amount(int(d*100))
+
+def amount_to_decimal(a):
+    return Decimal(str(a))
+
+
+
 # returns a dictionary mapping ofxid to transactions in the list
 # for only transactions that have an ofxid
 def ledger_transactions_by_ofxid(txns):
@@ -68,7 +77,7 @@ def ofx_txn_to_ledger_txn(t, account):
     #t.sic
     #t.mcc
     #t.checknum
-    it = Transaction(cents_from_decimal(t.amount), t.date, account)
+    it = Transaction(amount_from_decimal(t.amount), t.date, account)
     it.description = str(t.payee)
 
     if t.memo and len(t.memo) > 0 and t.memo != t.payee:
