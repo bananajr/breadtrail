@@ -16,6 +16,10 @@ class Amount(object):
         if cents != None:
             self.cents += int(cents)
 
+    @staticmethod
+    def from_cents(c):
+        return Amount(c//100, c % 100)
+
     def __float__(self):
         return float(self.cents)/100.0
 
@@ -123,6 +127,10 @@ class Transaction(LedgerObject):
         self.properties = {}   # map of key names to Properties
         self.tags = set()
 
+    def __repr__(self):
+        fmt = "%s %s " + ("from" if self.sign == -1 else "into") + " %s: %s"
+        return fmt % (self.date, self.amount, self.account.name, self.description)
+
     def signed_amount(self):
         return self.amount*self.sign
 
@@ -145,6 +153,8 @@ class Allocation(LedgerObject):
         self.amount = mk_amount(amount)
         self.category = category
         self.tags = []
+    def __repr__(self):
+        return "%s->%s" % (self.amount, self.category.name)
 
 class Tag(LedgerObject):
     def __init__(self, val):

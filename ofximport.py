@@ -77,7 +77,7 @@ def ofx_txn_to_ledger_txn(t, account):
     #t.sic
     #t.mcc
     #t.checknum
-    it = Transaction(amount_from_decimal(t.amount), t.date, account)
+    it = Transaction(Amount.from_cents(int(t.amount*100)), t.date, account)
     it.description = str(t.payee)
 
     if t.memo and len(t.memo) > 0 and t.memo != t.payee:
@@ -101,7 +101,7 @@ def finalize_ledger_txn(it):
 def print_txn(t, f):
     datestr = datetime_to_date_str(t.date)
     dirstr = "from" if t.sign == -1 else "into"
-    amtstr = cents_to_str(t.amount if t.amount >= 0 else -t.amount)
+    amtstr = str(t.amount)
     line = (datestr, " $", amtstr, " ", dirstr, " ", t.account.name, " ", quote_str(t.description))
     for tok in line: f.write(tok)
     f.write("\n")
@@ -110,12 +110,12 @@ def print_txn(t, f):
             if not a.amount:
                 line = ("    take all from ", cat_name)
             else:
-                line = ("    take $", cents_to_str(a.amount), " from ", cat_name)
+                line = ("    take $", str(a.amount), " from ", cat_name)
         else:
             if not a.amount:
                 line = ("    put all into ", cat_name)
             else:
-                line = ("    put $", cents_to_str(a.amount), " into ", cat_name)
+                line = ("    put $", str(a.amount), " into ", cat_name)
 
         for tok in line: f.write(tok)
         f.write("\n")

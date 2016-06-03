@@ -198,11 +198,7 @@ class BreadTrail(cmdln.Cmdln):
         if not opts.select_expn:
             select = None
         else:
-            match = re.match('(lambda\s+)?(\w+):(.*)', select_expn)
-            if not match:
-                print "Error: unexpected syntax in 'select' expression."
-                return
-            select = compile('lambda %s: %s' % (t_var_name, select_expn), '<string>', 'eval')
+            select = compile('lambda %s: %s' % (t_var_name, opts.select_expn), '<string>', 'eval')
 
         if not opts.init_stmt:
             init = None
@@ -210,7 +206,8 @@ class BreadTrail(cmdln.Cmdln):
             init = compile(opts.init_stmt, '<string>', 'exec')
 
         if not opts.process_stmt:
-            opts.process_stmt  = 'print %s' % t_var_name
+            opts.process_stmt = 'print %s.date, %s.amount, %s.description' % \
+                (t_var_name, t_var_name, t_var_name)
         process = compile(opts.process_stmt, '<string>', 'exec')
 
         if not opts.finalize_stmt:
