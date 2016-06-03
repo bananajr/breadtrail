@@ -49,15 +49,22 @@ class Amount(object):
         return Amount(0, -self.cents)
 
     def __eq__(self, other):
-        return self.cents == other.cents if isinstance(other, Amount) else self.cents == other
+        if isinstance(other, Amount):
+            return self.cents == other.cents
+        elif isinstance(other, int):
+            return self.cents == other*100
+        elif isinstance(other, float):
+            return self.cents == int(other*100.0)
+        else:
+            return False
     def __gt__(self, other):
-        return self.cents >  other.cents if isinstance(other, Amount) else self.cents >  other
+        return self.cents >  other.cents if isinstance(other, Amount) else self.cents >  other*100
     def __ge__(self, other):
-        return self.cents >= other.cents if isinstance(other, Amount) else self.cents >= other
+        return self.cents >= other.cents if isinstance(other, Amount) else self.cents >= other*100
     def __lt__(self, other):
-        return self.cents <  other.cents if isinstance(other, Amount) else self.cents <  other
+        return self.cents <  other.cents if isinstance(other, Amount) else self.cents <  other*100
     def __le__(self, other):
-        return self.cents <= other.cents if isinstance(other, Amount) else self.cents <= other
+        return self.cents <= other.cents if isinstance(other, Amount) else self.cents <= other*100
 
     def __str__(self):
         if self.cents >= 0:
@@ -136,6 +143,17 @@ class Transaction(LedgerObject):
 
     def description_matches(self, pattern):
         return re.match(self.description, pattern)
+
+    def unallocated_amount(self):
+        remainder = Amount(self.amount)
+        for (cat_name, a) in self.allocations:
+            if a.amount != None:
+                remainder -= a.amount
+            else:
+                remainder = Amount(0)
+        return remainder
+
+
 
     def allocate_to(self, category_name, amount=None):
         amount = mk_amount(amount)

@@ -71,8 +71,6 @@ class BreadTrail(cmdln.Cmdln):
                       help="ledger filename")
         return op
 
-    #@cmdln.option("-u", "--show-updates", action="store_true", help="display update information")
-    #@cmdln.option("-v", "--verbose", action="store_true", help="print extra information")
 
     @cmdln.alias("verify")
     def do_check(self, subcmd, opts):
@@ -96,6 +94,14 @@ class BreadTrail(cmdln.Cmdln):
                 self.parser.update_transaction(t)
         self._write_ledger()
 
+    def expand_account_names_list(self, names):
+        names_list = []
+        for name in names:
+            if name == 'all':
+                names_list.extend(self.ledger.accounts.keys())
+            else:
+                names_list += name
+
     @cmdln.option("--date", help="compute the balance on the given date")
     @cmdln.alias("bal")
     @cmdln.alias("abal")
@@ -118,13 +124,8 @@ class BreadTrail(cmdln.Cmdln):
 
         if len(names) == 0:
             names_list = keys
-        else:
-            names_list = []
-            for name in names:
-                if name == 'all':
-                    names_list.extend(L.accounts.keys())
-                else:
-                    names_list += name
+        else: 
+            names_list = expand_account_names_list(names)
         col = max(len(name) for name in names_list) + 2
         total = Amount(0)
         for name in names_list:
@@ -135,6 +136,7 @@ class BreadTrail(cmdln.Cmdln):
             print (("%%-%ds" % col) + " %12s") % (name, str(balances[name]))
         if len(names_list) > 0:
             print (("%%-%ds" % col) + " %12s") % ("total:", total)
+
 
     @cmdln.option("--date", help="compute the balance on the given date")
     @cmdln.alias("ebal")
@@ -177,26 +179,44 @@ class BreadTrail(cmdln.Cmdln):
         if len(names_list) > 0:
             print (("%%-%ds" % col) + " %12s") % ("total:", total)
 
+
+    @cmdln.option("-s", "--select-expn",   help="")
     @cmdln.alias("reg")
-    def do_register(self, subcmd, opts, account):
+    def do_register(self, subcmd, opts, account_name):
         """${cmd_name}: print the history of transactions for an account
 
         ${cmd_usage}
         ${cmd_option_list}
         """
         self._parse_ledger()
-        if not account in self.parser.ledger.accounts:
-            print "Error: unknown account name '%s'." % account
+
+        if not account_name in self.parser.ledger.accounts:
+            print "Error: unknown account name '%s'." % account_name
             return
-        account = self.parser.ledger.accounts[account]
-        balance = 0
+        account = self.parser.ledger.accounts[account_name]
+
+        if not opts.select_expn:
+            select = None
+        else:
+            m = re.match("([A-Za-z_]+):(.*$)", opts.select_expn)
+            if m:
+                t_var_name = m.groups(1)
+                opts.select_expn = m.groups(2)
+            else:
+                t_var_name = 't'
+            select = compile('lambda %s: %s' % (t_var_name, opts.select_expn), '<string>', 'eval')
+
+        balance = Amount(0)
         for t in self.parser.ledger.transactions:
             if t.account is not account: continue
-            amount = t.amount
+            amount = t.signed_amount()
             balance = balance + amount
+            if select and not eval(select)(t):
+                continue
             date = t.date
             desc = t.description or ''
-            print "%s %10s %10s %s" % (str(t.date.date()), cents_to_str(amount), cents_to_str(balance), desc)
+            print "%s %10s %10s %s" % (str(t.date.date()), str(amount), str(balance), desc)
+
 
     @cmdln.alias("ereg", "eregister")
     def do_envelope_register(self, subcmd, opts, category):
@@ -266,17 +286,26 @@ class BreadTrail(cmdln.Cmdln):
             exec(finalize, context)
 
 
-    def do_listfiles(self, usbcmd, opts):
+    def do_list(self, subcmd, opts, what):
         """${cmd_name}: lists the ledger file and all imported files
 
         ${cmd_usage}
         ${cmd_option_list}
         """
         self._parse_ledger()
-        print self.parser.filename
-        for cmd in self.parser.commands:
-            if isinstance(cmd, ImportFile):
-                print cmd.path
+        if what == 'accounts':
+            for a in self.parser.ledger.accounts.keys():
+                print a
+        elif what == 'categories' or what == 'envelopes':
+            for c in sorted(self.parser.ledger.categories.keys()):
+                print c
+        elif what == 'files':
+            print self.parser.filename
+            for cmd in self.parser.commands:
+                if isinstance(cmd, ImportFile):
+                    print cmd.path
+        else:
+            sys.stderr.write("Error: don't know how to list '%s'" % what)
 
 
 
